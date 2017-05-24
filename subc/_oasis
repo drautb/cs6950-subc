@@ -1,0 +1,19 @@
+OASISFormat: 0.4
+Name:        SubC
+Version:     0.0.1
+Synopsis:    A simple compiler for a subset of C to LLVM.
+Authors:     Ben Draut
+License:     MIT
+OCamlVersion: >= 4.01
+
+AlphaFeatures:
+  ocamlbuild_more_args
+
+XOCamlbuildExtraArgs:
+  -use-menhir -tag thread
+
+Executable subc
+  Path:       src
+  BuildTools: ocamlbuild
+  MainIs:     main.ml
+  BuildDepends: llvm, core
