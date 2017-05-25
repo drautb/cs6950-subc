@@ -1,131 +1,110 @@
+%token EOF
 %token <int> INT
 %token <char> CHAR
-%token VOID_LIT
-%token CHAR_LIT
-%token INT_LIT
-%token IF
-%token ELSE
-%token WHILE
-%token RETURN
-%token <string> ID
-%token LEFT_BRACE
-%token RIGHT_BRACE
-%token LEFT_BRACKET
-%token RIGHT_BRACKET
-%token LEFT_PAREN
-%token RIGHT_PAREN
+%token VOID_LIT CHAR_LIT INT_LIT IF ELSE WHILE RETURN
+%token LEFT_BRACE RIGHT_BRACE LEFT_BRACKET RIGHT_BRACKET LEFT_PAREN RIGHT_PAREN
 %token SEMICOLON
 %token COMMA
-%token STAR
-%token PLUS
-%token MINUS
-%token SLASH
+%token STAR PLUS MINUS SLASH
 %token AMP
 %token ASSIGN
-%token L_AND
-%token L_OR
-%token L_NOT
-%token B_EQ
-%token B_NEQ
-%token B_LEQ
-%token B_LESS
-%token B_GEQ
-%token B_GREATER
-%token EOF
+%token L_AND L_OR L_NOT
+%token B_EQ B_NEQ B_LEQ B_LESS B_GEQ B_GREATER
+%token <string> ID
 
-%start <unit> prog
+%start <unit> program
 %%
 
-prog:
-  | piece*; EOF { }
+program:
+  | declaration_or_function*; EOF { }
   ;
 
-piece:
-  | decl; SEMICOLON     { }
-  | func                { }
+declaration_or_function:
+  | declaration; SEMICOLON { }
+  | function_declaration { }
   ;
 
-decl:
-  | type_decl; var_decl { }
-  | type_decl; ID; LEFT_PAREN; param_types; RIGHT_PAREN { }
-  | VOID_LIT; ID; LEFT_PAREN; param_types; RIGHT_PAREN { }
+declaration:
+  | type_specifier; variable_declaration { }
+  | type_specifier; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN { }
+  | VOID_LIT; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN { }
   ;
 
-array_decl:
+array_declaration:
   | LEFT_BRACKET; INT; RIGHT_BRACKET { }
   ;
 
-var_decl:
-  | ID; array_decl? { }
+variable_declaration:
+  | ID; array_declaration? { }
   ;
 
-type_decl:
+type_specifier:
   | CHAR_LIT; STAR* { }
   | INT_LIT; STAR* { }
   ;
 
-brackets:
+array_signature:
   | LEFT_BRACKET; RIGHT_BRACKET { }
   ;
 
-var_sig:
-  | type_decl; ID; brackets? { }
+variable_signature:
+  | type_specifier; ID; array_signature? { }
 
-param_types:
+parameter_types:
   | VOID_LIT { }
-  | separated_list(COMMA, var_sig) { }
+  | separated_list(COMMA, variable_signature) { }
   ;
 
-local_decl:
-  | type_decl; var_decl; SEMICOLON { }
+local_declaration:
+  | type_specifier; variable_declaration; SEMICOLON { }
   ;
 
-func:
-  | type_decl; ID; LEFT_PAREN; param_types; RIGHT_PAREN; LEFT_BRACE; local_decl*; stmt*; RIGHT_BRACE { }
-  | VOID_LIT; ID; LEFT_PAREN; param_types; RIGHT_PAREN; LEFT_BRACE; local_decl*; stmt*; RIGHT_BRACE { }
+function_declaration:
+  | type_specifier; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN; LEFT_BRACE; local_declaration*; statement*; RIGHT_BRACE { }
+  | VOID_LIT; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN; LEFT_BRACE; local_declaration*; statement*; RIGHT_BRACE { }
   ;
 
-stmt:
-  | IF; LEFT_PAREN; expr; RIGHT_PAREN; stmt { }
-  | IF; LEFT_PAREN; expr; RIGHT_PAREN; stmt; ELSE; stmt { }
-  | WHILE; LEFT_PAREN; expr; RIGHT_PAREN; stmt { }
+statement:
+  | IF; LEFT_PAREN; expression; RIGHT_PAREN; statement { }
+  | IF; LEFT_PAREN; expression; RIGHT_PAREN; statement; ELSE; statement { }
+  | WHILE; LEFT_PAREN; expression; RIGHT_PAREN; statement { }
   | RETURN; SEMICOLON { }
-  | RETURN; expr; SEMICOLON { }
+  | RETURN; expression; SEMICOLON { }
   | assignment; SEMICOLON { }
-  | ID; LEFT_PAREN; separated_list(COMMA, expr); RIGHT_PAREN; SEMICOLON { }
-  | LEFT_BRACE; stmt*; RIGHT_BRACE { }
+  | ID; LEFT_PAREN; separated_list(COMMA, expression); RIGHT_PAREN; SEMICOLON { }
+  | LEFT_BRACE; statement*; RIGHT_BRACE { }
   | SEMICOLON { }
   ;
 
 assignment:
-  | STAR*; ID; ASSIGN; expr { }
-  | STAR*; ID; LEFT_BRACKET; expr; RIGHT_BRACKET; ASSIGN; expr { }
+  | STAR*; ID; ASSIGN; expression { }
+  | STAR*; ID; LEFT_BRACKET; expression; RIGHT_BRACKET; ASSIGN; expression { }
   ;
 
-expr:
-  | MINUS; expr { }
-  | L_NOT; expr { }
-  | expr; binop; expr { }
-  | expr; relop; expr { }
-  | expr; logical_op; expr { }
+expression:
+  | MINUS; expression { }
+  | L_NOT; expression { }
+  | expression; binary_op; expression { }
+  | expression; relational_op; expression { }
+  | expression; logical_op; expression { }
   | ID { }
-  | ID; LEFT_BRACKET; expr; RIGHT_BRACKET { }
+  | ID; LEFT_BRACKET; expression; RIGHT_BRACKET { }
   | AMP; ID { }
-  | AMP; ID; LEFT_BRACKET; expr; RIGHT_BRACKET { }
-  | ID; LEFT_PAREN; separated_list(COMMA, expr); RIGHT_PAREN { }
-  | LEFT_PAREN; expr; RIGHT_PAREN { }
+  | AMP; ID; LEFT_BRACKET; expression; RIGHT_BRACKET { }
+  | ID; LEFT_PAREN; separated_list(COMMA, expression); RIGHT_PAREN { }
+  | LEFT_PAREN; expression; RIGHT_PAREN { }
   | INT { }
   | CHAR { }
   ;
 
-binop:
+binary_op:
   | PLUS { }
   | MINUS { }
   | STAR { }
   | SLASH { }
   ;
 
-relop:
+relational_op:
   | B_EQ { }
   | B_NEQ { }
   | B_LEQ { }
