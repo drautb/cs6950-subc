@@ -13,7 +13,20 @@ XOCamlbuildExtraArgs:
   -use-menhir -tag thread
 
 Executable subc
-  Path:       src
+  Path: src/main
+  MainIs: main.ml
   BuildTools: ocamlbuild
-  MainIs:     main.ml
   BuildDepends: llvm, core
+
+Executable test
+  Path: src/test
+  MainIs: tests.ml
+  Build$: flag(tests)
+  BuildTools: ocamlbuild
+  BuildDepends: ounit
+  CompiledObject: best
+  Install: false
+
+Test main
+  Run$: flag(tests)
+  Command: $test
