@@ -4,7 +4,10 @@ open Core
 let load_programs path =
   let base = (Sys.getcwd ()) ^ "/parser_examples/" ^ path ^ "/" in
   let file_list = Sys.readdir base in
-  List.map (Array.to_list file_list)
+  List.map (List.filter (Array.to_list file_list)
+              ~f:(fun filename ->
+                  (String.equal ".c"
+                     (String.sub filename ~pos:((String.length filename) - 2) ~len:2))))
     ~f:(fun filename ->
         let file = In_channel.create (base ^ filename) in
         let contents = In_channel.input_all file in

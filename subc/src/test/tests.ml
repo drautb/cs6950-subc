@@ -1,6 +1,5 @@
 open OUnit2
-open Parser_test
 
 let () =
-  run_test_tt_main parser_tests
+  run_test_tt_main Parser_test.parser_tests
 ;;
