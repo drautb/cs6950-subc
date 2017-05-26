@@ -1,5 +1,5 @@
 all:
-	ocaml setup.ml -configure --enable-tests
+	ocaml setup.ml -configure --enable-tests > /dev/null
 	ocaml setup.ml -build
 	ocaml setup.ml -test
 

@@ -12,21 +12,30 @@ AlphaFeatures:
 XOCamlbuildExtraArgs:
   -use-menhir -tag thread
 
+Library subc_core
+  Path: src/lib
+  Modules: Parser
+  InternalModules: Lexer
+  BuildTools: ocamlbuild
+  BuildDepends: llvm, core
+
 Executable subc
   Path: src/main
   MainIs: main.ml
   BuildTools: ocamlbuild
-  BuildDepends: llvm, core
+  BuildDepends: subc_core
 
 Executable test
   Path: src/test
   MainIs: tests.ml
   Build$: flag(tests)
   BuildTools: ocamlbuild
-  BuildDepends: ounit
+  BuildDepends: ounit, subc_core
   CompiledObject: best
   Install: false
 
 Test main
   Run$: flag(tests)
   Command: $test
+  TestTools: test
+  WorkingDirectory: src/test
