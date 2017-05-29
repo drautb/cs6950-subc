@@ -11,3 +11,7 @@ char** ppc;
 
 char ca[100];
 char* pca[100];
+
+int main(int argc, char* argv[]) {
+  return x;
+}

@@ -59,61 +59,126 @@ local_declaration:
   | type_specifier; variable_declaration; SEMICOLON { }
   ;
 
+declaration_list:
+  | local_declaration { }
+  | declaration_list; local_declaration { }
+  ;
+
 function_declaration:
-  | type_specifier; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN; LEFT_BRACE; local_declaration*; statement*; RIGHT_BRACE { }
-  | VOID_LIT; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN; LEFT_BRACE; local_declaration*; statement*; RIGHT_BRACE { }
+  | type_specifier; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN; compound_statement { }
+  | VOID_LIT; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN; compound_statement { }
   ;
 
 statement:
-  | IF; LEFT_PAREN; expression; RIGHT_PAREN; statement { }
-  | IF; LEFT_PAREN; expression; RIGHT_PAREN; statement; ELSE; statement { }
-  | WHILE; LEFT_PAREN; expression; RIGHT_PAREN; statement { }
-  | RETURN; SEMICOLON { }
-  | RETURN; expression; SEMICOLON { }
-  | assignment; SEMICOLON { }
-  | ID; LEFT_PAREN; separated_list(COMMA, expression); RIGHT_PAREN; SEMICOLON { }
-  | LEFT_BRACE; statement*; RIGHT_BRACE { }
-  | SEMICOLON { }
+  | compound_statement { }
+  | selection_statement { }
+  | expression_statement { }
+  | iteration_statement { }
+  | jump_statement { }
   ;
 
-assignment:
-  | STAR*; ID; ASSIGN; expression { }
-  | STAR*; ID; LEFT_BRACKET; expression; RIGHT_BRACKET; ASSIGN; expression { }
+statement_list:
+  | statement { }
+  | statement_list; statement { }
+  ;
+
+compound_statement:
+  | LEFT_BRACE; RIGHT_BRACE { }
+  | LEFT_BRACE; statement_list; RIGHT_BRACE { }
+  | LEFT_BRACE; declaration_list; RIGHT_BRACE { }
+  | LEFT_BRACE; declaration_list; statement_list; RIGHT_BRACE { }
+  ;
+
+selection_statement:
+  | IF; LEFT_PAREN; expression; RIGHT_PAREN; statement { }
+  | IF; LEFT_PAREN; expression; RIGHT_PAREN; statement; ELSE; statement { }
+  ;
+
+expression_statement:
+  | SEMICOLON { }
+  | expression; SEMICOLON { }
+  ;
+
+iteration_statement:
+  | WHILE; LEFT_PAREN; expression; RIGHT_PAREN; statement { }
+  ;
+
+jump_statement:
+  | RETURN; SEMICOLON { }
+  | RETURN; expression; SEMICOLON { }
   ;
 
 expression:
-  | MINUS; expression { }
-  | L_NOT; expression { }
-  | expression; binary_op; expression { }
-  | expression; relational_op; expression { }
-  | expression; logical_op; expression { }
+  | conditional_expression { }
+  | unary_expression; ASSIGN; expression { }
+  ;
+
+conditional_expression:
+  | logical_or_expression { }
+  ;
+
+logical_or_expression:
+  | logical_and_expression { }
+  | logical_or_expression; L_OR; logical_and_expression { }
+  ;
+
+logical_and_expression:
+  | equality_expression { }
+  | logical_and_expression; L_AND; equality_expression { }
+  ;
+
+equality_expression:
+  | relational_expression { }
+  | equality_expression; B_EQ; relational_expression { }
+  | equality_expression; B_NEQ; relational_expression { }
+  ;
+
+relational_expression:
+  | additive_expression { }
+  | relational_expression; B_LESS; additive_expression { }
+  | relational_expression; B_GREATER; additive_expression { }
+  | relational_expression; B_LEQ; additive_expression { }
+  | relational_expression; B_GEQ; additive_expression { }
+  ;
+
+additive_expression:
+  | multiplicative_expression { }
+  | additive_expression; PLUS; multiplicative_expression { }
+  | additive_expression; MINUS; multiplicative_expression { }
+  ;
+
+multiplicative_expression:
+  | cast_expression { }
+  | multiplicative_expression; STAR; cast_expression { }
+  | multiplicative_expression; SLASH; cast_expression { }
+  ;
+
+cast_expression:
+  | unary_expression { }
+  | LEFT_PAREN; type_specifier; RIGHT_PAREN; cast_expression { }
+  ;
+
+unary_expression:
+  | postfix_expression { }
+  | unary_operator; cast_expression { }
+  ;
+
+postfix_expression:
+  | primary_expression { }
+  | postfix_expression; LEFT_BRACKET; expression; RIGHT_BRACKET { }
+  | postfix_expression; LEFT_PAREN; separated_list(COMMA, expression); RIGHT_PAREN { }
+  ;
+
+primary_expression:
   | ID { }
-  | ID; LEFT_BRACKET; expression; RIGHT_BRACKET { }
-  | AMP; ID { }
-  | AMP; ID; LEFT_BRACKET; expression; RIGHT_BRACKET { }
-  | ID; LEFT_PAREN; separated_list(COMMA, expression); RIGHT_PAREN { }
-  | LEFT_PAREN; expression; RIGHT_PAREN { }
   | INT { }
   | CHAR { }
+  | LEFT_PAREN; expression; RIGHT_PAREN { }
   ;
 
-binary_op:
-  | PLUS { }
-  | MINUS { }
+unary_operator:
+  | AMP { }
   | STAR { }
-  | SLASH { }
-  ;
-
-relational_op:
-  | B_EQ { }
-  | B_NEQ { }
-  | B_LEQ { }
-  | B_LESS { }
-  | B_GEQ { }
-  | B_GREATER { }
-  ;
-
-logical_op:
-  | L_AND { }
-  | L_OR { }
+  | MINUS { }
+  | L_NOT { }
   ;
