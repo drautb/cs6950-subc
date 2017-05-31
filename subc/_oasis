@@ -14,10 +14,10 @@ XOCamlbuildExtraArgs:
 
 Library subc_core
   Path: src/lib
-  Modules: Parser
+  Modules: Parser, Ast
   InternalModules: Lexer
   BuildTools: ocamlbuild
-  BuildDepends: llvm, core
+  BuildDepends: llvm, core, sexplib, ppx_sexp_conv
 
 Executable subc
   Path: src/main

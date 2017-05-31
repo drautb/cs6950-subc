@@ -30,7 +30,7 @@ let parser_tests =
         ~f:(fun (name, prog) ->
             name >::
             (fun _ ->
-               parse_program prog)))
+               let _ = parse_program prog in ())))
 
      (List.map rejected_programs
         ~f:(fun (name, prog) ->

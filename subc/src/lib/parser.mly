@@ -12,16 +12,16 @@
 %token B_EQ B_NEQ B_LEQ B_LESS B_GEQ B_GREATER
 %token <string> ID
 
-%start <unit> program
+%start <Ast.subc_unit list> program
 %%
 
 program:
-  | declaration_or_function*; EOF { }
+  | l = declaration_or_function*; EOF { l }
   ;
 
 declaration_or_function:
-  | declaration; SEMICOLON { }
-  | function_declaration { }
+  | declaration; SEMICOLON { Ast.Declaration }
+  | function_declaration { Ast.Function }
   ;
 
 declaration:
