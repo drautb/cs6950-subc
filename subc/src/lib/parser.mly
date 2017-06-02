@@ -34,8 +34,8 @@ declaration_or_function:
 declaration:
   | t = type_specifier; id = ID
     { Ast.Variable { Ast.Variable.var_type = t; Ast.Variable.id = id } }
-  | type_specifier; ID; LEFT_BRACKET; INT; RIGHT_BRACKET
-    { Ast.Array }
+  | t = type_specifier; id = ID; LEFT_BRACKET; size = INT; RIGHT_BRACKET
+    { Ast.Array { Ast.Array.var_type = t; Ast.Array.id = id; Ast.Array.size = size } }
   | type_specifier; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN
     { Ast.Function }
   | VOID_LIT; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN

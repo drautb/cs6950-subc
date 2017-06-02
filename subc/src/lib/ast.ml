@@ -8,16 +8,26 @@ type subc_type =
 
 module Variable = struct
   type t =
-  {
-    var_type: subc_type;
-    id: string;
-  }
+    {
+      var_type: subc_type;
+      id: string;
+    }
+  [@@deriving sexp]
+end;;
+
+module Array = struct
+  type t =
+    {
+      var_type: subc_type;
+      id: string;
+      size: int;
+    }
   [@@deriving sexp]
 end;;
 
 type declaration =
   | Variable of Variable.t
-  | Array
+  | Array of Array.t
   | Function
 [@@deriving sexp]
 

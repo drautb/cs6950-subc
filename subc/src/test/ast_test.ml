@@ -6,7 +6,7 @@ open Ast
 let load_external_tests =
   let base = (Sys.getcwd ()) ^ "/ast_examples/" in
   let file_list = Sys.readdir base in
-  List.map (List.filter (Array.to_list file_list)
+  List.map (List.filter (Core.Array.to_list file_list)
               ~f:(fun filename ->
                   (String.equal ".c"
                      (String.sub filename ~pos:((String.length filename) - 2) ~len:2))))
@@ -44,11 +44,17 @@ let embedded_tests = [
 
   ("basic int array declaration",
    "int arr[5];",
-   [Declaration Array]);
+   [Declaration (Array {Array.var_type = Int; Array.id = "arr"; Array.size = 5})]);
 
-  ("int pointer to array declaration",
-   "int* arr[5];",
-   [Declaration Array])
+  ("int pointer array declaration",
+   "int* arr[10];",
+   [Declaration (Array {Array.var_type = Pointer Int; Array.id = "arr"; Array.size = 10})]);
+
+  ("multi-level char pointer array declaration",
+   "char*** letters[256];",
+   [Declaration (Array {Array.var_type = Pointer (Pointer (Pointer Char));
+                        Array.id = "letters";
+                        Array.size = 256})])
 ];;
 
 let parse_program prog_str =
