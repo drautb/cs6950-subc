@@ -84,14 +84,16 @@ declaration_list:
   ;
 
 function_definition:
-  | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; compound_statement
+  | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; block = compound_statement
     { { Ast.FunctionDefinition.ret_type = t;
         Ast.FunctionDefinition.id = id;
-        Ast.FunctionDefinition.arg_list = args } }
-  | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; compound_statement
+        Ast.FunctionDefinition.arg_list = args;
+        Ast.FunctionDefinition.block = block } }
+  | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; block = compound_statement
     { { Ast.FunctionDefinition.ret_type = Ast.Void;
         Ast.FunctionDefinition.id = id;
-        Ast.FunctionDefinition.arg_list = args } }
+        Ast.FunctionDefinition.arg_list = args;
+        Ast.FunctionDefinition.block = block } }
   ;
 
 statement:
@@ -108,10 +110,14 @@ statement_list:
   ;
 
 compound_statement:
-  | LEFT_BRACE; RIGHT_BRACE { }
-  | LEFT_BRACE; statement_list; RIGHT_BRACE { }
-  | LEFT_BRACE; declaration_list; RIGHT_BRACE { }
-  | LEFT_BRACE; declaration_list; statement_list; RIGHT_BRACE { }
+  | LEFT_BRACE; RIGHT_BRACE
+    { { Ast.Block.decls = []; Ast.Block.stmts = [] } }
+  | LEFT_BRACE; statement_list; RIGHT_BRACE
+    { { Ast.Block.decls = []; Ast.Block.stmts = [] } }
+  | LEFT_BRACE; declaration_list; RIGHT_BRACE
+    { { Ast.Block.decls = []; Ast.Block.stmts = [] } }
+  | LEFT_BRACE; declaration_list; statement_list; RIGHT_BRACE
+    { { Ast.Block.decls = []; Ast.Block.stmts = [] } }
   ;
 
 selection_statement:

@@ -57,12 +57,26 @@ type declaration =
   | FunctionDeclaration of FunctionDeclaration.t
 [@@deriving sexp]
 
+type statement =
+  | Statement
+[@@deriving sexp]
+
+module Block = struct
+  type t =
+    {
+      decls: declaration list;
+      stmts: statement list;
+    }
+  [@@deriving sexp]
+end;;
+
 module FunctionDefinition = struct
   type t =
     {
       ret_type: subc_type;
       id: string;
       arg_list: arg_list;
+      block: Block.t;
     }
   [@@deriving sexp]
 end;;
