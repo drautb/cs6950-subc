@@ -1,3 +1,7 @@
+%{
+open Core
+%}
+
 %token EOF
 %token <int> INT
 %token <char> CHAR
@@ -12,35 +16,37 @@
 %token B_EQ B_NEQ B_LEQ B_LESS B_GEQ B_GREATER
 %token <string> ID
 
-%start <Ast.subc_unit list> program
+%start <Ast.subc_unit Core.List.t> program
 %%
 
 program:
-  | l = declaration_or_function*; EOF { l }
+  | l = declaration_or_function*; EOF
+    { l }
   ;
 
 declaration_or_function:
-  | declaration; SEMICOLON { Ast.Declaration }
-  | function_declaration { Ast.Function }
+  | d = declaration; SEMICOLON
+    { Ast.Declaration d }
+  | function_declaration
+    { Ast.FunctionDefinition }
   ;
 
 declaration:
-  | type_specifier; variable_declaration { }
-  | type_specifier; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN { }
-  | VOID_LIT; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN { }
-  ;
-
-array_declaration:
-  | LEFT_BRACKET; INT; RIGHT_BRACKET { }
-  ;
-
-variable_declaration:
-  | ID; array_declaration? { }
+  | t = type_specifier; id = ID
+    { Ast.Variable { Ast.Variable.var_type = t; Ast.Variable.id = id } }
+  | type_specifier; ID; LEFT_BRACKET; INT; RIGHT_BRACKET
+    { Ast.Array }
+  | type_specifier; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN
+    { Ast.Function }
+  | VOID_LIT; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN
+    { Ast.Function }
   ;
 
 type_specifier:
-  | CHAR_LIT; STAR* { }
-  | INT_LIT; STAR* { }
+  | CHAR_LIT; ptrs = STAR*
+    { List.fold_left ptrs ~init:Ast.Char ~f:(fun t _ -> (Ast.Pointer t)) }
+  | INT_LIT; ptrs = STAR*
+    { List.fold_left ptrs ~init:Ast.Int ~f:(fun t _ -> (Ast.Pointer t)) }
   ;
 
 array_signature:
@@ -56,7 +62,8 @@ parameter_types:
   ;
 
 local_declaration:
-  | type_specifier; variable_declaration; SEMICOLON { }
+  | type_specifier; ID; SEMICOLON { }
+  | type_specifier; ID; LEFT_BRACKET; INT; RIGHT_BRACKET; SEMICOLON { }
   ;
 
 declaration_list:
