@@ -36,10 +36,16 @@ declaration:
     { Ast.Variable { Ast.Variable.var_type = t; Ast.Variable.id = id } }
   | t = type_specifier; id = ID; LEFT_BRACKET; size = INT; RIGHT_BRACKET
     { Ast.Array { Ast.Array.var_type = t; Ast.Array.id = id; Ast.Array.size = size } }
-  | type_specifier; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN
-    { Ast.Function }
-  | VOID_LIT; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN
-    { Ast.Function }
+  | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN
+    { Ast.FunctionDeclaration
+      { Ast.FunctionDeclaration.ret_type = t;
+        Ast.FunctionDeclaration.id = id;
+        Ast.FunctionDeclaration.arg_list = args; } }
+  | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN
+    { Ast.FunctionDeclaration
+      { Ast.FunctionDeclaration.ret_type = Ast.Void;
+        Ast.FunctionDeclaration.id = id;
+        Ast.FunctionDeclaration.arg_list = args; } }
   ;
 
 type_specifier:
@@ -49,16 +55,22 @@ type_specifier:
     { List.fold_left ptrs ~init:Ast.Int ~f:(fun t _ -> (Ast.Pointer t)) }
   ;
 
-array_signature:
-  | LEFT_BRACKET; RIGHT_BRACKET { }
+variable_signature:
+  | t = type_specifier; id = ID
+    { { Ast.Arg.var_type = t;
+        Ast.Arg.id = id;
+        Ast.Arg.array = false } }
+  | t = type_specifier; id = ID; LEFT_BRACKET; RIGHT_BRACKET
+    { { Ast.Arg.var_type = t;
+        Ast.Arg.id = id;
+        Ast.Arg.array = true } }
   ;
 
-variable_signature:
-  | type_specifier; ID; array_signature? { }
-
 parameter_types:
-  | VOID_LIT { }
-  | separated_list(COMMA, variable_signature) { }
+  | VOID_LIT
+    { Ast.Void }
+  | args = separated_list(COMMA, variable_signature)
+    { Ast.ArgList args }
   ;
 
 local_declaration:

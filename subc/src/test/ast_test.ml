@@ -25,6 +25,8 @@ let load_external_tests =
 ;;
 
 let embedded_tests = [
+  (* -----------------------------------------------------------------
+     Variable/Array Declarations *)
   ("basic int variable declaration",
    "int x;",
    [Declaration (Variable {Variable.var_type = Int; Variable.id = "x"})]);
@@ -54,7 +56,33 @@ let embedded_tests = [
    "char*** letters[256];",
    [Declaration (Array {Array.var_type = Pointer (Pointer (Pointer Char));
                         Array.id = "letters";
-                        Array.size = 256})])
+                        Array.size = 256})]);
+
+  (* -----------------------------------------------------------------
+     Function Declarations *)
+  ("simplest function declaration",
+   "void empty(void);",
+   [Declaration
+      (FunctionDeclaration
+         {FunctionDeclaration.ret_type = Void;
+          FunctionDeclaration.id = "empty";
+          FunctionDeclaration.arg_list = Void})]);
+
+  ("main function",
+   "int main(int argc, char* argv[]);",
+   [Declaration
+      (FunctionDeclaration
+         {FunctionDeclaration.ret_type = Int;
+          FunctionDeclaration.id = "main";
+          FunctionDeclaration.arg_list =
+            (ArgList [
+                {Arg.var_type = Int;
+                 Arg.id = "argc";
+                 Arg.array = false};
+                {Arg.var_type = Pointer Char;
+                 Arg.id = "argv";
+                 Arg.array = true}
+              ])})])
 ];;
 
 let parse_program prog_str =
