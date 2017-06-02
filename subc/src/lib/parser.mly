@@ -27,8 +27,8 @@ program:
 declaration_or_function:
   | d = declaration; SEMICOLON
     { Ast.Declaration d }
-  | function_declaration
-    { Ast.FunctionDefinition }
+  | f = function_definition
+    { Ast.FunctionDefinition f }
   ;
 
 declaration:
@@ -83,9 +83,15 @@ declaration_list:
   | declaration_list; local_declaration { }
   ;
 
-function_declaration:
-  | type_specifier; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN; compound_statement { }
-  | VOID_LIT; ID; LEFT_PAREN; parameter_types; RIGHT_PAREN; compound_statement { }
+function_definition:
+  | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; compound_statement
+    { { Ast.FunctionDefinition.ret_type = t;
+        Ast.FunctionDefinition.id = id;
+        Ast.FunctionDefinition.arg_list = args } }
+  | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; compound_statement
+    { { Ast.FunctionDefinition.ret_type = Ast.Void;
+        Ast.FunctionDefinition.id = id;
+        Ast.FunctionDefinition.arg_list = args } }
   ;
 
 statement:
