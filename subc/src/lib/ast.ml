@@ -7,81 +7,26 @@ type subc_type =
   | Pointer of subc_type
 [@@deriving sexp]
 
-module Arg = struct
-  type t =
-    {
-      var_type: subc_type;
-      id: string;
-      array: bool;
-    }
-  [@@deriving sexp]
-end;;
-
 type arg_list =
-  | Void
-  | ArgList of Arg.t list
+  | ArgVoid
+  | ArgList of (subc_type * string * bool) list
 [@@deriving sexp]
 
-module Variable = struct
-  type t =
-    {
-      var_type: subc_type;
-      id: string;
-    }
-  [@@deriving sexp]
-end;;
-
-module Array = struct
-  type t =
-    {
-      var_type: subc_type;
-      id: string;
-      size: int;
-    }
-  [@@deriving sexp]
-end;;
-
-module FunctionDeclaration = struct
-  type t =
-    {
-      ret_type: subc_type;
-      id: string;
-      arg_list: arg_list;
-    }
-  [@@deriving sexp]
-end;;
-
 type declaration =
-  | Variable of Variable.t
-  | Array of Array.t
-  | FunctionDeclaration of FunctionDeclaration.t
+  | Variable of (subc_type * string)
+  | Array of (subc_type * string * int)
+  | FunctionDeclaration of (subc_type * string * arg_list)
 [@@deriving sexp]
 
 type statement =
   | Statement
 [@@deriving sexp]
 
-module Block = struct
-  type t =
-    {
-      decls: declaration list;
-      stmts: statement list;
-    }
-  [@@deriving sexp]
-end;;
-
-module FunctionDefinition = struct
-  type t =
-    {
-      ret_type: subc_type;
-      id: string;
-      arg_list: arg_list;
-      block: Block.t;
-    }
-  [@@deriving sexp]
-end;;
+type block =
+   | Block of (declaration list * statement list)
+[@@deriving sexp]
 
 type subc_unit =
   | Declaration of declaration
-  | FunctionDefinition of FunctionDefinition.t
+  | FunctionDefinition of (subc_type * string * arg_list * block)
 [@@deriving sexp]

@@ -29,60 +29,45 @@ let embedded_tests = [
      Variable/Array Declarations *)
   ("basic int variable declaration",
    "int x;",
-   [Declaration (Variable {Variable.var_type = Int; Variable.id = "x"})]);
+   [Declaration (Variable (Int, "x"))]);
 
   ("basic char variable declaration",
    "char c;",
-   [Declaration (Variable {Variable.var_type = Char; Variable.id = "c"})]);
+   [Declaration (Variable (Char, "c"))]);
 
   ("basic int pointer variable declaration",
    "int* x;",
-   [Declaration (Variable {Variable.var_type = Pointer Int; Variable.id = "x"})]);
+   [Declaration (Variable ((Pointer Int), "x"))]);
 
   ("multi-level pointer to variable declaration",
    "int*** triple;",
-   [Declaration (Variable {Variable.var_type = Pointer (Pointer (Pointer Int));
-                           Variable.id = "triple"})]);
+   [Declaration (Variable ((Pointer (Pointer (Pointer Int))), "triple"))]);
 
   ("basic int array declaration",
    "int arr[5];",
-   [Declaration (Array {Array.var_type = Int; Array.id = "arr"; Array.size = 5})]);
+   [Declaration (Array (Int, "arr", 5))]);
 
   ("int pointer array declaration",
    "int* arr[10];",
-   [Declaration (Array {Array.var_type = Pointer Int; Array.id = "arr"; Array.size = 10})]);
+   [Declaration (Array ((Pointer Int), "arr", 10))]);
 
   ("multi-level char pointer array declaration",
    "char*** letters[256];",
-   [Declaration (Array {Array.var_type = Pointer (Pointer (Pointer Char));
-                        Array.id = "letters";
-                        Array.size = 256})]);
+   [Declaration (Array ((Pointer (Pointer (Pointer Char))), "letters", 256))]);
 
   (* -----------------------------------------------------------------
      Function Declarations *)
   ("simplest function declaration",
    "void empty(void);",
    [Declaration
-      (FunctionDeclaration
-         {FunctionDeclaration.ret_type = Void;
-          FunctionDeclaration.id = "empty";
-          FunctionDeclaration.arg_list = Void})]);
+      (FunctionDeclaration (Void, "empty", ArgVoid))]);
 
   ("main function",
    "int main(int argc, char* argv[]);",
    [Declaration
       (FunctionDeclaration
-         {FunctionDeclaration.ret_type = Int;
-          FunctionDeclaration.id = "main";
-          FunctionDeclaration.arg_list =
-            (ArgList [
-                {Arg.var_type = Int;
-                 Arg.id = "argc";
-                 Arg.array = false};
-                {Arg.var_type = Pointer Char;
-                 Arg.id = "argv";
-                 Arg.array = true}
-              ])})])
+         (Int, "main", (ArgList [(Int, "argc", false);
+                                 ((Pointer Char), "argv", true)])))])
 ];;
 
 let parse_program prog_str =

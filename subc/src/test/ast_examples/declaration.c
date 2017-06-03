@@ -4,6 +4,6 @@ int z;
 
 @
 
-((Declaration (Variable ((var_type Int) (id "x"))))
- (Declaration (Variable ((var_type Int) (id "y"))))
- (Declaration (Variable ((var_type Int) (id "z")))))
+((Declaration (Variable (Int "x")))
+ (Declaration (Variable (Int "y")))
+ (Declaration (Variable (Int "z"))))

@@ -33,19 +33,13 @@ declaration_or_function:
 
 declaration:
   | t = type_specifier; id = ID
-    { Ast.Variable { Ast.Variable.var_type = t; Ast.Variable.id = id } }
+    { Ast.Variable (t, id) }
   | t = type_specifier; id = ID; LEFT_BRACKET; size = INT; RIGHT_BRACKET
-    { Ast.Array { Ast.Array.var_type = t; Ast.Array.id = id; Ast.Array.size = size } }
+    { Ast.Array (t, id, size) }
   | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN
-    { Ast.FunctionDeclaration
-      { Ast.FunctionDeclaration.ret_type = t;
-        Ast.FunctionDeclaration.id = id;
-        Ast.FunctionDeclaration.arg_list = args; } }
+    { Ast.FunctionDeclaration (t, id, args) }
   | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN
-    { Ast.FunctionDeclaration
-      { Ast.FunctionDeclaration.ret_type = Ast.Void;
-        Ast.FunctionDeclaration.id = id;
-        Ast.FunctionDeclaration.arg_list = args; } }
+    { Ast.FunctionDeclaration (Ast.Void, id, args) }
   ;
 
 type_specifier:
@@ -57,18 +51,14 @@ type_specifier:
 
 variable_signature:
   | t = type_specifier; id = ID
-    { { Ast.Arg.var_type = t;
-        Ast.Arg.id = id;
-        Ast.Arg.array = false } }
+    { (t, id, false) }
   | t = type_specifier; id = ID; LEFT_BRACKET; RIGHT_BRACKET
-    { { Ast.Arg.var_type = t;
-        Ast.Arg.id = id;
-        Ast.Arg.array = true } }
+    { (t, id, true) }
   ;
 
 parameter_types:
   | VOID_LIT
-    { Ast.Void }
+    { Ast.ArgVoid }
   | args = separated_list(COMMA, variable_signature)
     { Ast.ArgList args }
   ;
@@ -85,15 +75,9 @@ declaration_list:
 
 function_definition:
   | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; block = compound_statement
-    { { Ast.FunctionDefinition.ret_type = t;
-        Ast.FunctionDefinition.id = id;
-        Ast.FunctionDefinition.arg_list = args;
-        Ast.FunctionDefinition.block = block } }
+    { (t, id, args, Ast.Block block) }
   | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; block = compound_statement
-    { { Ast.FunctionDefinition.ret_type = Ast.Void;
-        Ast.FunctionDefinition.id = id;
-        Ast.FunctionDefinition.arg_list = args;
-        Ast.FunctionDefinition.block = block } }
+    { (Ast.Void, id, args, Ast.Block block) }
   ;
 
 statement:
@@ -111,13 +95,13 @@ statement_list:
 
 compound_statement:
   | LEFT_BRACE; RIGHT_BRACE
-    { { Ast.Block.decls = []; Ast.Block.stmts = [] } }
+    { ([], []) }
   | LEFT_BRACE; statement_list; RIGHT_BRACE
-    { { Ast.Block.decls = []; Ast.Block.stmts = [] } }
+    { ([], []) }
   | LEFT_BRACE; declaration_list; RIGHT_BRACE
-    { { Ast.Block.decls = []; Ast.Block.stmts = [] } }
+    { ([], []) }
   | LEFT_BRACE; declaration_list; statement_list; RIGHT_BRACE
-    { { Ast.Block.decls = []; Ast.Block.stmts = [] } }
+    { ([], []) }
   ;
 
 selection_statement:
