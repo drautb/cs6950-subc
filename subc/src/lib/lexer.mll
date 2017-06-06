@@ -25,7 +25,7 @@ rule read =
   | white    { read lexbuf }
   | newline  { next_line lexbuf; read lexbuf }
   | intcon   { INT (int_of_string (Lexing.lexeme lexbuf)) }
-  | charcon  { CHAR (Lexing.lexeme lexbuf).[0] }
+  | charcon  { CHAR (Lexing.lexeme lexbuf).[1] }
   | "void"   { VOID_LIT }
   | "char"   { CHAR_LIT }
   | "int"    { INT_LIT }

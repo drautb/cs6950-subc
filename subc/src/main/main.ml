@@ -16,10 +16,17 @@ let parse_with_error lexbuf =
     fprintf stderr "%a: syntax error\n" print_position lexbuf;
     exit(-2)
 
+let string_of_ast ast =
+  List.to_string ~f:(fun elt -> Sexp.to_string (Ast.sexp_of_subc_unit elt)) ast
+;;
+
 let parse_and_print lexbuf =
   match parse_with_error lexbuf with
-  | _ ->
-    printf "Parsed %d lines successfully!\n" lexbuf.lex_curr_p.pos_lnum
+  | ast ->
+    printf "Parsed %d lines successfully!\nAST:\n\n%s"
+      lexbuf.lex_curr_p.pos_lnum
+      (string_of_ast ast)
+
 
 let loop filename () =
   printf "Parsing file: %s...\n\n" filename;

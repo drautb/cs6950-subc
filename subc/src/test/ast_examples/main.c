@@ -6,8 +6,9 @@ int main(int argc, char* argv[])
 @
 
 ((FunctionDefinition
-  (Int "main"
-   (ArgList ((Int "argc" false)
-             ((Pointer Char) "argv" true)))
-   (Block (()
-           ((Return ((IntConst 0)))))))))
+  Int "main"
+  (ArgList ((Int "argc" false)
+            ((Pointer Char) "argv" true)))
+  (Block
+   ()
+   ((Return ((IntConst 0)))))))

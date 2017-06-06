@@ -28,7 +28,7 @@ declaration_or_function:
   | d = declaration; SEMICOLON
     { Ast.Declaration d }
   | f = function_definition
-    { Ast.FunctionDefinition f }
+    { f }
   ;
 
 declaration:
@@ -79,9 +79,9 @@ declaration_list:
 
 function_definition:
   | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; block = compound_statement
-    { (t, id, args, block) }
+    { Ast.FunctionDefinition (t, id, args, block) }
   | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; block = compound_statement
-    { (Ast.Void, id, args, block) }
+    { Ast.FunctionDefinition (Ast.Void, id, args, block) }
   ;
 
 statement:

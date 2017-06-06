@@ -13,9 +13,9 @@ type arg_list =
 [@@deriving sexp]
 
 type declaration =
-  | Variable of (subc_type * string)
-  | Array of (subc_type * string * int)
-  | FunctionDeclaration of (subc_type * string * arg_list)
+  | Variable of subc_type * string
+  | Array of subc_type * string * int
+  | FunctionDeclaration of subc_type * string * arg_list
 [@@deriving sexp]
 
 type expression =
@@ -45,15 +45,15 @@ type expression =
 [@@deriving sexp]
 
 type statement =
-  | Block of (declaration list * statement list)
-  | Conditional of (expression * statement * statement option)
+  | Block of declaration list * statement list
+  | Conditional of expression * statement * statement option
   | Expression of expression
-  | Loop of (expression * statement)
+  | Loop of expression * statement
   | Return of expression option
   | StmtVoid
 [@@deriving sexp]
 
 type subc_unit =
   | Declaration of declaration
-  | FunctionDefinition of (subc_type * string * arg_list * statement)
+  | FunctionDefinition of subc_type * string * arg_list * statement
 [@@deriving sexp]
