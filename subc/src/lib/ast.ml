@@ -1,4 +1,4 @@
-open Sexplib.Std
+open Core
 
 type subc_type =
   | Void
@@ -57,3 +57,13 @@ type subc_unit =
   | Declaration of declaration
   | FunctionDefinition of subc_type * string * arg_list * statement
 [@@deriving sexp]
+
+type ast =
+  | Ast of subc_unit list
+[@@deriving sexp]
+
+(* Helper function for converting an AST into String form *)
+let string_of_ast ast =
+  match ast with
+  | Ast prog_list -> List.to_string ~f:(fun elt -> Sexp.to_string (sexp_of_subc_unit elt)) prog_list
+;;

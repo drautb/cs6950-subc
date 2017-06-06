@@ -16,12 +16,12 @@ open Core
 %token B_EQ B_NEQ B_LEQ B_LESS B_GEQ B_GREATER
 %token <string> ID
 
-%start <Ast.subc_unit Core.List.t> program
+%start <Ast.ast> program
 %%
 
 program:
   | l = declaration_or_function*; EOF
-    { l }
+    { Ast.Ast l }
   ;
 
 declaration_or_function:

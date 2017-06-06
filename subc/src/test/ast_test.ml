@@ -16,9 +16,9 @@ let load_external_tests =
         let prog_and_ast = String.split contents ~on:'@' in
         let prog_str = List.nth_exn prog_and_ast 0 in
         let expected_ast =
-          try List.t_of_sexp subc_unit_of_sexp
-                (Sexp.of_string (List.nth_exn prog_and_ast 1))
-          with Sexp.Parse_error _ -> (eprintf "\nAn error occurred while reading %s\n" filename); [] in
+          try Ast (List.t_of_sexp subc_unit_of_sexp
+                     (Sexp.of_string (List.nth_exn prog_and_ast 1)))
+          with Sexp.Parse_error _ -> (eprintf "\nAn error occurred while reading %s\n" filename); Ast [] in
         let test_case = (filename, prog_str, expected_ast) in
         In_channel.close file;
         test_case)
@@ -29,53 +29,48 @@ let embedded_tests = [
      Variable/Array Declarations *)
   ("basic int variable declaration",
    "int x;",
-   [Declaration (Variable (Int, "x"))]);
+   Ast [Declaration (Variable (Int, "x"))]);
 
   ("basic char variable declaration",
    "char c;",
-   [Declaration (Variable (Char, "c"))]);
+   Ast [Declaration (Variable (Char, "c"))]);
 
   ("basic int pointer variable declaration",
    "int* x;",
-   [Declaration (Variable ((Pointer Int), "x"))]);
+   Ast [Declaration (Variable ((Pointer Int), "x"))]);
 
   ("multi-level pointer to variable declaration",
    "int*** triple;",
-   [Declaration (Variable ((Pointer (Pointer (Pointer Int))), "triple"))]);
+   Ast [Declaration (Variable ((Pointer (Pointer (Pointer Int))), "triple"))]);
 
   ("basic int array declaration",
    "int arr[5];",
-   [Declaration (Array (Int, "arr", 5))]);
+   Ast [Declaration (Array (Int, "arr", 5))]);
 
   ("int pointer array declaration",
    "int* arr[10];",
-   [Declaration (Array ((Pointer Int), "arr", 10))]);
+   Ast [Declaration (Array ((Pointer Int), "arr", 10))]);
 
   ("multi-level char pointer array declaration",
    "char*** letters[256];",
-   [Declaration (Array ((Pointer (Pointer (Pointer Char))), "letters", 256))]);
+   Ast [Declaration (Array ((Pointer (Pointer (Pointer Char))), "letters", 256))]);
 
   (* -----------------------------------------------------------------
      Function Declarations *)
   ("simplest function declaration",
    "void empty(void);",
-   [Declaration
-      (FunctionDeclaration (Void, "empty", ArgVoid))]);
+   Ast [Declaration (FunctionDeclaration (Void, "empty", ArgVoid))]);
 
   ("main function",
    "int main(int argc, char* argv[]);",
-   [Declaration
-      (FunctionDeclaration
-         (Int, "main", (ArgList [(Int, "argc", false);
-                                 ((Pointer Char), "argv", true)])))])
+   Ast [Declaration
+          (FunctionDeclaration
+             (Int, "main", (ArgList [(Int, "argc", false);
+                                     ((Pointer Char), "argv", true)])))])
 ];;
 
 let parse_program prog_str =
   Parser.program Lexer.read (Lexing.from_string prog_str)
-;;
-
-let string_of_ast ast =
-  List.to_string ~f:(fun elt -> Sexp.to_string (sexp_of_subc_unit elt)) ast
 ;;
 
 let ast_tests =
