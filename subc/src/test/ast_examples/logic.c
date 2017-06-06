@@ -1,11 +1,18 @@
 int main(int argc, char* argv[])
 {
-  if (1 < 1) {}
-  if (1 <= 1) {}
-  if (1 == 1) {}
-  if (1 > 1) {}
-  if (1 >= 1) {}
-  if (1 != 1) {}
+  1 < 1;
+  1 <= 1;
+  1 == 1;
+  1 > 1;
+  1 >= 1;
+  1 != 1;
+
+  1 == 1 || 1 == 1;
+  1 == 1 && 1 == 1;
+
+  1 == 1 || 1 == 1 && 1 == 1;
+
+  !(1 == 1 && 1 == 1);
 
   return 0;
 }
@@ -18,10 +25,25 @@ int main(int argc, char* argv[])
             ((Pointer Char) "argv" true)))
   (Block
    ()
-   ((Conditional (LessThan (IntConst 1) (IntConst 1)) (Block () ()) None)
-    (Conditional (LessThanEqual (IntConst 1) (IntConst 1)) (Block () ()) None)
-    (Conditional (Equal (IntConst 1) (IntConst 1)) (Block () ()) None)
-    (Conditional (GreaterThan (IntConst 1) (IntConst 1)) (Block () ()) None)
-    (Conditional (GreaterThanEqual (IntConst 1) (IntConst 1)) (Block () ()) None)
-    (Conditional (NotEqual (IntConst 1) (IntConst 1)) (Block () ()) None)
+   ((Expression (LessThan (IntConst 1) (IntConst 1)))
+    (Expression (LessThanEqual (IntConst 1) (IntConst 1)))
+    (Expression (Equal (IntConst 1) (IntConst 1)))
+    (Expression (GreaterThan (IntConst 1) (IntConst 1)))
+    (Expression (GreaterThanEqual (IntConst 1) (IntConst 1)))
+    (Expression (NotEqual (IntConst 1) (IntConst 1)))
+    (Expression (LogicalOr
+                 (Equal (IntConst 1) (IntConst 1))
+                 (Equal (IntConst 1) (IntConst 1))))
+    (Expression (LogicalAnd
+                 (Equal (IntConst 1) (IntConst 1))
+                 (Equal (IntConst 1) (IntConst 1))))
+    (Expression (LogicalOr
+                 (Equal (IntConst 1) (IntConst 1))
+                 (LogicalAnd
+                  (Equal (IntConst 1) (IntConst 1))
+                  (Equal (IntConst 1) (IntConst 1)))))
+    (Expression (LogicalNot
+                 (LogicalAnd
+                  (Equal (IntConst 1) (IntConst 1))
+                  (Equal (IntConst 1) (IntConst 1)))))
     (Return ((IntConst 0)))))))
