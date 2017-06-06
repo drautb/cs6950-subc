@@ -64,136 +64,180 @@ parameter_types:
   ;
 
 local_declaration:
-  | type_specifier; ID; SEMICOLON { }
-  | type_specifier; ID; LEFT_BRACKET; INT; RIGHT_BRACKET; SEMICOLON { }
+  | t = type_specifier; id = ID; SEMICOLON
+    { Ast.Variable (t, id) }
+  | t = type_specifier; id = ID; LEFT_BRACKET; size = INT; RIGHT_BRACKET; SEMICOLON
+    { Ast.Array (t, id, size) }
   ;
 
 declaration_list:
-  | local_declaration { }
-  | declaration_list; local_declaration { }
+  | decl = local_declaration
+    { [decl] }
+  | lst = declaration_list; decl = local_declaration
+    { lst @ [decl] }
   ;
 
 function_definition:
   | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; block = compound_statement
-    { (t, id, args, Ast.Block block) }
+    { (t, id, args, block) }
   | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN; block = compound_statement
-    { (Ast.Void, id, args, Ast.Block block) }
+    { (Ast.Void, id, args, block) }
   ;
 
 statement:
-  | compound_statement { }
-  | selection_statement { }
-  | expression_statement { }
-  | iteration_statement { }
-  | jump_statement { }
+  | s = compound_statement
+    { s }
+  | s = selection_statement
+    { s }
+  | s = expression_statement
+    { s }
+  | s = iteration_statement
+    { s }
+  | s = jump_statement
+    { s }
   ;
 
 statement_list:
-  | statement { }
-  | statement_list; statement { }
+  | stmt = statement
+    { [stmt] }
+  | lst = statement_list; stmt = statement
+    { lst @ [stmt] }
   ;
 
 compound_statement:
   | LEFT_BRACE; RIGHT_BRACE
-    { ([], []) }
-  | LEFT_BRACE; statement_list; RIGHT_BRACE
-    { ([], []) }
-  | LEFT_BRACE; declaration_list; RIGHT_BRACE
-    { ([], []) }
-  | LEFT_BRACE; declaration_list; statement_list; RIGHT_BRACE
-    { ([], []) }
+    { Ast.Block ([], []) }
+  | LEFT_BRACE; stmts = statement_list; RIGHT_BRACE
+    { Ast.Block ([], stmts) }
+  | LEFT_BRACE; decls = declaration_list; RIGHT_BRACE
+    { Ast.Block (decls, []) }
+  | LEFT_BRACE; decls = declaration_list; stmts = statement_list; RIGHT_BRACE
+    { Ast.Block (decls, stmts) }
   ;
 
 selection_statement:
-  | IF; LEFT_PAREN; expression; RIGHT_PAREN; statement { }
-  | IF; LEFT_PAREN; expression; RIGHT_PAREN; statement; ELSE; statement { }
+  | IF; LEFT_PAREN; e = expression; RIGHT_PAREN; s = statement
+    { Ast.Conditional (e, s, None) }
+  | IF; LEFT_PAREN; e = expression; RIGHT_PAREN; s1 = statement; ELSE; s2 = statement
+    { Ast.Conditional (e, s1, Some s2) }
   ;
 
 expression_statement:
-  | SEMICOLON { }
-  | expression; SEMICOLON { }
+  | SEMICOLON
+    { Ast.StmtVoid }
+  | e = expression; SEMICOLON
+    { Ast.Expression e }
   ;
 
 iteration_statement:
-  | WHILE; LEFT_PAREN; expression; RIGHT_PAREN; statement { }
+  | WHILE; LEFT_PAREN; e = expression; RIGHT_PAREN; s = statement
+    { Ast.Loop (e, s) }
   ;
 
 jump_statement:
-  | RETURN; SEMICOLON { }
-  | RETURN; expression; SEMICOLON { }
+  | RETURN; SEMICOLON
+    { Ast.Return None }
+  | RETURN; e = expression; SEMICOLON
+    { Ast.Return (Some e) }
   ;
 
 expression:
-  | conditional_expression { }
-  | unary_expression; ASSIGN; expression { }
-  ;
-
-conditional_expression:
-  | logical_or_expression { }
+  | e = logical_or_expression
+    { e }
+  | lhs = unary_expression; ASSIGN; rhs = expression
+    { Ast.Assignment (lhs, rhs) }
   ;
 
 logical_or_expression:
-  | logical_and_expression { }
-  | logical_or_expression; L_OR; logical_and_expression { }
+  | e = logical_and_expression
+    { e }
+  | lhs = logical_or_expression; L_OR; rhs = logical_and_expression
+    { Ast.LogicalOr (lhs, rhs) }
   ;
 
 logical_and_expression:
-  | equality_expression { }
-  | logical_and_expression; L_AND; equality_expression { }
+  | e = equality_expression
+    { e }
+  | lhs = logical_and_expression; L_AND; rhs = equality_expression
+    { Ast.LogicalAnd (lhs, rhs) }
   ;
 
 equality_expression:
-  | relational_expression { }
-  | equality_expression; B_EQ; relational_expression { }
-  | equality_expression; B_NEQ; relational_expression { }
+  | e = relational_expression
+    { e }
+  | lhs = equality_expression; B_EQ; rhs = relational_expression
+    { Ast.Equal (lhs, rhs) }
+  | lhs = equality_expression; B_NEQ; rhs = relational_expression
+    { Ast.NotEqual (lhs, rhs) }
   ;
 
 relational_expression:
-  | additive_expression { }
-  | relational_expression; B_LESS; additive_expression { }
-  | relational_expression; B_GREATER; additive_expression { }
-  | relational_expression; B_LEQ; additive_expression { }
-  | relational_expression; B_GEQ; additive_expression { }
+  | e = additive_expression
+    { e }
+  | lhs = relational_expression; B_LESS; rhs = additive_expression
+    { Ast.LessThan (lhs, rhs) }
+  | lhs = relational_expression; B_GREATER; rhs = additive_expression
+    { Ast.GreaterThan (lhs, rhs) }
+  | lhs = relational_expression; B_LEQ; rhs = additive_expression
+    { Ast.LessThanEqual (lhs, rhs) }
+  | lhs = relational_expression; B_GEQ; rhs = additive_expression
+    { Ast.GreaterThanEqual (lhs, rhs) }
   ;
 
 additive_expression:
-  | multiplicative_expression { }
-  | additive_expression; PLUS; multiplicative_expression { }
-  | additive_expression; MINUS; multiplicative_expression { }
+  | e = multiplicative_expression
+    { e }
+  | lhs = additive_expression; PLUS; rhs = multiplicative_expression
+    { Ast.Add (lhs, rhs) }
+  | lhs = additive_expression; MINUS; rhs = multiplicative_expression
+    { Ast.Subtract (lhs, rhs) }
   ;
 
 multiplicative_expression:
-  | cast_expression { }
-  | multiplicative_expression; STAR; cast_expression { }
-  | multiplicative_expression; SLASH; cast_expression { }
+  | e = cast_expression
+    { e }
+  | lhs = multiplicative_expression; STAR; rhs = cast_expression
+    { Ast.Multiply (lhs, rhs) }
+  | lhs = multiplicative_expression; SLASH; rhs = cast_expression
+    { Ast.Divide (lhs, rhs) }
   ;
 
 cast_expression:
-  | unary_expression { }
-  | LEFT_PAREN; type_specifier; RIGHT_PAREN; cast_expression { }
+  | e = unary_expression
+    { e }
+  | LEFT_PAREN; t = type_specifier; RIGHT_PAREN; e = cast_expression
+    { Ast.Cast (t, e) }
   ;
 
 unary_expression:
-  | postfix_expression { }
-  | unary_operator; cast_expression { }
+  | e = postfix_expression
+    { e }
+  | AMP; e = cast_expression
+    { Ast.AddressOf e }
+  | STAR; e = cast_expression
+    { Ast.Dereference e }
+  | MINUS; e = cast_expression
+    { Ast.Negate e }
+  | L_NOT; e = cast_expression
+    { Ast.LogicalNot e }
   ;
 
 postfix_expression:
-  | primary_expression { }
-  | postfix_expression; LEFT_BRACKET; expression; RIGHT_BRACKET { }
-  | postfix_expression; LEFT_PAREN; separated_list(COMMA, expression); RIGHT_PAREN { }
+  | e = primary_expression
+    { e }
+  | arr = postfix_expression; LEFT_BRACKET; idx = expression; RIGHT_BRACKET
+    { Ast.ArrayRef (arr, idx) }
+  | fn = postfix_expression; LEFT_PAREN; args = separated_list(COMMA, expression); RIGHT_PAREN
+    { Ast.FunctionCall (fn, args) }
   ;
 
 primary_expression:
-  | ID { }
-  | INT { }
-  | CHAR { }
-  | LEFT_PAREN; expression; RIGHT_PAREN { }
-  ;
-
-unary_operator:
-  | AMP { }
-  | STAR { }
-  | MINUS { }
-  | L_NOT { }
+  | id = ID
+    { Ast.Id id }
+  | n = INT
+    { Ast.IntConst n }
+  | c = CHAR
+    { Ast.CharConst c }
+  | LEFT_PAREN; e =  expression; RIGHT_PAREN
+    { e }
   ;

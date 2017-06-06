@@ -9,4 +9,5 @@ int main(int argc, char* argv[])
   (Int "main"
    (ArgList ((Int "argc" false)
              ((Pointer Char) "argv" true)))
-   (Block (() ())))))
+   (Block (()
+           ((Return ((IntConst 0)))))))))
