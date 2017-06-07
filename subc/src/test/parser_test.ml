@@ -16,10 +16,6 @@ let load_programs path =
         test_case)
 ;;
 
-let parse_program prog_str =
-  Parser.program Lexer.read (Lexing.from_string prog_str)
-;;
-
 let accepted_programs = load_programs "accept"
 let rejected_programs = load_programs "reject"
 
@@ -30,13 +26,13 @@ let parser_tests =
         ~f:(fun (name, prog) ->
             name >::
             (fun _ ->
-               let _ = parse_program prog in ())))
+               let _ = Subc.ast_of_string prog in ())))
 
      (List.map rejected_programs
         ~f:(fun (name, prog) ->
             name >::
             (fun _ ->
-               let f = fun () -> parse_program prog in
+               let f = fun () -> Subc.ast_of_string prog in
                assert_raises Parser.Error f
                  ~msg:(Printf.sprintf "Expected program '%s' to not parse!" name)))))
 ;;

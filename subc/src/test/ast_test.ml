@@ -69,17 +69,13 @@ let embedded_tests = [
                                      ((Pointer Char), "argv", true)])))])
 ];;
 
-let parse_program prog_str =
-  Parser.program Lexer.read (Lexing.from_string prog_str)
-;;
-
 let ast_tests =
   "ast_tests" >:::
   (List.map (List.append load_external_tests embedded_tests)
      ~f:(fun (name, prog_str, expected_ast) ->
          name >::
          (fun _ ->
-            let actual_ast = parse_program prog_str in
+            let actual_ast = Subc.ast_of_string prog_str in
             assert_equal
               expected_ast actual_ast
               ~msg:(sprintf
