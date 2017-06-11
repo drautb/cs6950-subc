@@ -26,7 +26,33 @@ let assert_type_error name f =
     | _ -> assert_failure (Printf.sprintf "Expected program '%s' to not typecheck!" name)
 ;;
 
-let accepted_programs = load_programs "accept"
+let accepted_programs =
+  List.append (load_programs "accept")
+    [
+      (* 'main' function related *)
+      ("proper main without declaration",
+       "int main(int argc, char* argv[]) { return 0; }");
+
+      ("proper main with declaration",
+       "int main(int argc, char* argv[]);" ^
+       "int main(int argc, char* argv[]) { return 0; }");
+
+      (* Variable declaration/scoping related checks *)
+      ("top-level variable shadowed in nested scope",
+       "int x;" ^
+       "int main(int argc, char* argv[]) {" ^
+       "  int x;" ^
+       "  return 0;" ^
+       "}");
+
+      ("variable shadowed in nested scope",
+       "int main(int argc, char* argv[]) {" ^
+       "  int x;" ^
+       "  { int x; }" ^
+       "  return 0;" ^
+       "}")
+    ]
+
 let rejected_programs =
   List.append (load_programs "reject")
     [
@@ -75,7 +101,33 @@ let rejected_programs =
 
       ("function definition duplicates formal argument names",
        "int main(int argc, char* argv[]);" ^
-       "int main(int argc, char* argc[]) { return 0; }")
+       "int main(int argc, char* argc[]) { return 0; }");
+
+      ("non-void function returns void",
+       "int main(int argc, char* argv[]) { return 0; }" ^
+       "int fn(void) { return; }");
+
+      ("void function returns a value",
+       "int main(int argc, char* argv[]) { return 0; }" ^
+       "void fn(void) { return 1; }");
+
+      (* Variable declaration/scope checks *)
+      ("variable redefined at top-level",
+       "int x;" ^
+       "int x;" ^
+       "int main(int argc, char* argv[]) { return 0; }");
+
+      ("variable redefined in same scope",
+       "int main(int argc, char* argv[]) {" ^
+       "  int x;" ^
+       "  int x;" ^
+       "  return 0;" ^
+       "}");
+
+      (* Array size declaration check. (Parser prevents negative sizes) *)
+      ("array declared with zero size",
+       "int x[0];" ^
+       "int main(int argc, char* argv[]) { return 0; }");
     ]
 
 let typechecker_tests =
@@ -83,12 +135,12 @@ let typechecker_tests =
   (List.append
      (List.map accepted_programs
         ~f:(fun (name, prog) ->
-            name >::
+            ("Accept: " ^ name) >::
             (fun _ -> typecheck (Subc.ast_of_string prog))))
 
      (List.map rejected_programs
         ~f:(fun (name, prog) ->
-            name >::
+            ("Reject: " ^ name) >::
             (fun _ ->
                let f = fun () -> typecheck (Subc.ast_of_string prog) in
                (assert_type_error name f)))))
