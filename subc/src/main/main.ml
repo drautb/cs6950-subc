@@ -19,9 +19,11 @@ let parse_with_error lexbuf =
 let parse_and_print lexbuf =
   match parse_with_error lexbuf with
   | ast ->
-    printf "Parsed %d lines successfully!\nAST:\n\n%s"
+    printf "Parsed %d lines successfully!\nAST:\n\n%s\n\n"
       lexbuf.lex_curr_p.pos_lnum
-      (Ast.string_of_ast ast)
+      (Ast.string_of_ast ast);
+    printf "Typechecking...\n";
+    Typechecker.typecheck ast
 
 let loop filename () =
   printf "Parsing file: %s...\n\n" filename;
