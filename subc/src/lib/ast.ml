@@ -13,8 +13,8 @@ type arg_list =
 [@@deriving sexp]
 
 type declaration =
-  | Variable of subc_type * string
-  | Array of subc_type * string * int
+  | VariableDeclaration of subc_type * string
+  | ArrayDeclaration of subc_type * string * int
   | FunctionDeclaration of subc_type * string * arg_list
 [@@deriving sexp]
 

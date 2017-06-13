@@ -4,6 +4,6 @@ int z;
 
 @
 
-((Declaration (Variable Int "x"))
- (Declaration (Variable Int "y"))
- (Declaration (Variable Int "z")))
+((Declaration (VariableDeclaration Int "x"))
+ (Declaration (VariableDeclaration Int "y"))
+ (Declaration (VariableDeclaration Int "z")))

@@ -33,9 +33,9 @@ declaration_or_function:
 
 declaration:
   | t = type_specifier; id = ID
-    { Ast.Variable (t, id) }
+    { Ast.VariableDeclaration (t, id) }
   | t = type_specifier; id = ID; LEFT_BRACKET; size = INT; RIGHT_BRACKET
-    { Ast.Array (t, id, size) }
+    { Ast.ArrayDeclaration (t, id, size) }
   | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN
     { Ast.FunctionDeclaration (t, id, args) }
   | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN
@@ -65,9 +65,9 @@ parameter_types:
 
 local_declaration:
   | t = type_specifier; id = ID; SEMICOLON
-    { Ast.Variable (t, id) }
+    { Ast.VariableDeclaration (t, id) }
   | t = type_specifier; id = ID; LEFT_BRACKET; size = INT; RIGHT_BRACKET; SEMICOLON
-    { Ast.Array (t, id, size) }
+    { Ast.ArrayDeclaration (t, id, size) }
   ;
 
 declaration_list:

@@ -123,9 +123,9 @@ let typecheck_array_declaration scopes var_type id size =
 
 let typecheck_declaration fn_table scopes declaration =
   match declaration with
-  | Variable (var_type, id) ->
+  | VariableDeclaration (var_type, id) ->
     typecheck_variable_declaration scopes var_type id
-  | Array (var_type, id, size) ->
+  | ArrayDeclaration (var_type, id, size) ->
     typecheck_array_declaration scopes var_type id size
   | FunctionDeclaration (ret_type, name, args) ->
     typecheck_function_declaration fn_table ret_type name args

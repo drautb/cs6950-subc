@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
   (ArgList ((Int "argc" false)
             ((Pointer Char) "argv" true)))
   (Block
-   ((Variable Int "x"))
+   ((VariableDeclaration Int "x"))
    ((Expression (Assignment (Id "x") (IntConst 0)))
     (Loop
      (LessThan (Id "x") (IntConst 10))

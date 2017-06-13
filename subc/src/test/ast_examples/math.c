@@ -18,16 +18,16 @@ int main(int argc, char* argv[])
 
 @
 
-((Declaration (Variable Int "result"))
+((Declaration (VariableDeclaration Int "result"))
  (FunctionDefinition
   Int "main"
   (ArgList ((Int "argc" false)
             ((Pointer Char) "argv" true)))
   (Block
-   ((Variable Int "a")
-    (Variable Int "b")
-    (Variable Int "c")
-    (Variable Int "d"))
+   ((VariableDeclaration Int "a")
+    (VariableDeclaration Int "b")
+    (VariableDeclaration Int "c")
+    (VariableDeclaration Int "d"))
    ((Expression (Assignment (Id "a") (Add (IntConst 2) (IntConst 2))))
     (Expression (Assignment (Id "b") (Subtract (Id "a") (IntConst 3))))
     (Expression (Assignment (Id "c") (Multiply (Id "b") (IntConst 4))))

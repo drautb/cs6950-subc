@@ -29,31 +29,31 @@ let embedded_tests = [
      Variable/Array Declarations *)
   ("basic int variable declaration",
    "int x;",
-   Ast [Declaration (Variable (Int, "x"))]);
+   Ast [Declaration (VariableDeclaration (Int, "x"))]);
 
   ("basic char variable declaration",
    "char c;",
-   Ast [Declaration (Variable (Char, "c"))]);
+   Ast [Declaration (VariableDeclaration (Char, "c"))]);
 
   ("basic int pointer variable declaration",
    "int* x;",
-   Ast [Declaration (Variable ((Pointer Int), "x"))]);
+   Ast [Declaration (VariableDeclaration ((Pointer Int), "x"))]);
 
   ("multi-level pointer to variable declaration",
    "int*** triple;",
-   Ast [Declaration (Variable ((Pointer (Pointer (Pointer Int))), "triple"))]);
+   Ast [Declaration (VariableDeclaration ((Pointer (Pointer (Pointer Int))), "triple"))]);
 
   ("basic int array declaration",
    "int arr[5];",
-   Ast [Declaration (Array (Int, "arr", 5))]);
+   Ast [Declaration (ArrayDeclaration (Int, "arr", 5))]);
 
   ("int pointer array declaration",
    "int* arr[10];",
-   Ast [Declaration (Array ((Pointer Int), "arr", 10))]);
+   Ast [Declaration (ArrayDeclaration ((Pointer Int), "arr", 10))]);
 
   ("multi-level char pointer array declaration",
    "char*** letters[256];",
-   Ast [Declaration (Array ((Pointer (Pointer (Pointer Char))), "letters", 256))]);
+   Ast [Declaration (ArrayDeclaration ((Pointer (Pointer (Pointer Char))), "letters", 256))]);
 
   (* -----------------------------------------------------------------
      Function Declarations *)

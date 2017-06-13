@@ -17,9 +17,9 @@ int main(int argc, char* argv[]) {
   (ArgList ((Int "argc" false)
             ((Pointer Char) "argv" true)))
   (Block
-   ((Variable Char "c")
-    (Variable (Pointer Char) "pc")
-    (Variable Char "other_c"))
+   ((VariableDeclaration Char "c")
+    (VariableDeclaration (Pointer Char) "pc")
+    (VariableDeclaration Char "other_c"))
    ((Expression (Assignment (Id "c") (CharConst c)))
     (Expression (Assignment (Id "pc") (AddressOf (Id "c"))))
     (Expression (Assignment (Id "other_c") (Dereference (Id "pc"))))
