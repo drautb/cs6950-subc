@@ -97,6 +97,29 @@ let validate_main_fn fn_table =
     | _ -> raise (TypeError "'main' function does not have 'int' return type")
 ;;
 
+(* Given two types, return whether or not they're compatible. *)
+let rec compatible_types (t1 : subc_type) (t2 : subc_type) : bool =
+  match t1 with
+  | Void -> (match t2 with
+      | Void -> true
+      | _ -> false)
+  | Int -> (match t2 with
+      | Int | Char -> true
+      | _ -> false)
+  | Char -> (match t2 with
+      | Int | Char -> true
+      | _ -> false)
+  | Bool -> (match t2 with
+      | Bool -> true
+      | _ -> false)
+  | Pointer nested_type1 -> (match t2 with
+      | Pointer nested_type2 -> compatible_types nested_type1 nested_type2
+      | _ -> false)
+  | Array nested_type1 -> (match t2 with
+      | Array nested_type2 -> compatible_types nested_type1 nested_type2
+      | _ -> false)
+;;
+
 let typecheck_function_declaration fn_table ret_type name args =
   (* A function can only be declared once. *)
   let _ = match lookup_fn fn_table name with
@@ -131,20 +154,24 @@ let typecheck_declaration fn_table scopes declaration =
     typecheck_function_declaration fn_table ret_type name args
 ;;
 
-let typecheck_expression fn_table _ ret_type name args expr =
+let typecheck_expression _ _ (expr : expression) : subc_type =
+  (* TODO *)
   match expr with
-   | Equal (_, _) -> raise (TypeError "return expression does not conform to declared return type")
-   | _ -> save_fn fn_table name ret_type args false true
+   | Equal (_, _) -> Bool
+   | _ -> Int
 ;;
 
-let typecheck_return fn_table scopes (ret_type : subc_type) name args ret_expr =
+let typecheck_return fn_table scopes (ret_type : subc_type) name ret_expr =
   match ret_expr with
   | None -> (match ret_type with
       | Void -> ()
       | _ -> raise (TypeError "non-void function must return a value"))
   | Some expr -> (match ret_type with
       | Void -> raise (TypeError "void function may not return a value")
-      | _ -> typecheck_expression fn_table scopes ret_type name args expr)
+      | _ -> let ret_expr_type = typecheck_expression fn_table scopes expr in
+        (match compatible_types ret_type ret_expr_type with
+         | true -> save_fn fn_table name Void ArgVoid false true
+         | false -> raise (TypeError "return expression is not compatible with declared return type")))
 ;;
 
 (* Assuming a new scope has already been created, this function typechecks the list
@@ -161,10 +188,13 @@ and typecheck_statement fn_table scopes ret_type name args stmt =
     (* Start a new scope in a new block *)
     let scopes = make_scope () :: scopes in
     typecheck_block fn_table scopes ret_type name args decls stmts
-  | Conditional (_, _, _) -> ()
+  | Conditional (expr, _, _) ->
+    (match typecheck_expression fn_table scopes expr with
+     | Bool -> ()
+     | _ -> raise (TypeError "Conditional expression must be of type bool"))
   | Expression _ -> ()
   | Loop (_, _) -> ()
-  | Return expr -> typecheck_return fn_table scopes ret_type name args expr
+  | Return expr -> typecheck_return fn_table scopes ret_type name expr
   | StmtVoid -> ()
 ;;
 

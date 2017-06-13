@@ -61,6 +61,15 @@ let accepted_programs =
        "int main(int argc, char* argv[]) {" ^
        "  { int argc; }" ^
        "  return 0;" ^
+       "}");
+
+      (* Statement related checks *)
+      ("conditional test expression is boolean",
+       "int main(int argc, char* argv[]) {" ^
+       "  if (argc == 5) {" ^
+       "    return 1;" ^
+       "  }"^
+       "  return 0;" ^
        "}")
     ]
 
@@ -149,6 +158,15 @@ let rejected_programs =
       ("array declared with zero size",
        "int x[0];" ^
        "int main(int argc, char* argv[]) { return 0; }");
+
+      (* Statement related checks *)
+      ("conditional with non-bool test expression",
+       "int main(int argc, char* argv[]) {" ^
+       "  if (5) {" ^
+       "    return 5;" ^
+       "  }" ^
+       "  return 0;" ^
+       "}")
     ]
 
 let typechecker_tests =

@@ -4,6 +4,7 @@ type subc_type =
   | Void
   | Int
   | Char
+  | Bool
   | Pointer of subc_type
   | Array of subc_type
 [@@deriving sexp]
