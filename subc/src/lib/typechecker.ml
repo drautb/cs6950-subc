@@ -5,7 +5,7 @@ open Ast
 
 exception TypeError of string;;
 
-let main_fn_arglist = ArgList [(Int, "", false); ((Pointer Char), "", true)]
+let main_fn_arglist = ArgList [(Int, ""); (Array (Pointer Char), "")]
 
 let make_fn_table () =
   Hashtbl.create ~hashable:String.hashable ()
@@ -47,16 +47,16 @@ let add_to_scope scopes (id : string) (id_type : subc_type) =
 
 (* Given actual lists of argument types, return true if their length and types match. *)
 let argument_types_match
-    (args1 : (subc_type * string * bool) list)
-    (args2 : (subc_type * string * bool) list) =
+    (args1 : (subc_type * string) list)
+    (args2 : (subc_type * string) list) =
   match List.length args1 = List.length args2 with
   | false -> false
-  | true -> List.fold ~init:true ~f:(&&)
+  | true ->
+    List.fold ~init:true ~f:(&&)
             (List.map2_exn args1 args2
                ~f:(fun arg1 arg2 -> match arg1 with
-                   | (type1, _, is_array1) -> (match arg2 with
-                       | (type2, _, is_array2) ->
-                     (type1 = type2 && is_array1 = is_array2))))
+                   | (type1, _) -> (match arg2 with
+                       | (type2, _) -> (type1 = type2))))
 ;;
 
 (* Given two arglists, returns true if they have the same number and type of
@@ -77,7 +77,7 @@ let ensure_unique_parameter_names (fn_name : string) (arg_list : arg_list) =
   | ArgVoid -> ()
   | ArgList args -> let unique_parameter_names =
                       List.dedup (List.map args ~f:(fun arg -> match arg with
-                          | (_, name, _) -> name)) in
+                          | (_, name) -> name)) in
     match List.length unique_parameter_names = List.length args with
     | true -> ()
     | false -> raise (TypeError (sprintf "Function '%s' parameter names are not unique" fn_name))
@@ -149,7 +149,7 @@ let typecheck_return fn_table scopes (ret_type : subc_type) name args ret_expr =
 
 (* Assuming a new scope has already been created, this function typechecks the list
    of declarations and statements that comprise the block. *)
-let rec typecheck_block fn_table scopes ret_type name args stmt block_decls block_stmts =
+let rec typecheck_block fn_table scopes ret_type name args block_decls block_stmts =
   let _ = List.map block_decls
       ~f:(fun decl -> typecheck_declaration fn_table scopes decl) in
   let _ = List.map block_stmts
@@ -160,7 +160,7 @@ and typecheck_statement fn_table scopes ret_type name args stmt =
   | Block (decls, stmts) ->
     (* Start a new scope in a new block *)
     let scopes = make_scope () :: scopes in
-    typecheck_block fn_table scopes ret_type name args stmt decls stmts
+    typecheck_block fn_table scopes ret_type name args decls stmts
   | Conditional (_, _, _) -> ()
   | Expression _ -> ()
   | Loop (_, _) -> ()
@@ -173,7 +173,7 @@ let add_args_to_scopes scopes (arg_list : arg_list) =
   | ArgVoid -> ()
   | ArgList args -> let _ = List.map args
                         ~f:(fun arg -> match arg with
-                            | (var_type, id, _) -> add_to_scope scopes id var_type) in ()
+                            | (var_type, id) -> add_to_scope scopes id var_type) in ()
 ;;
 
 let typecheck_function_body fn_table scopes ret_type name args stmt =
@@ -182,7 +182,7 @@ let typecheck_function_body fn_table scopes ret_type name args stmt =
     (* Start a new scope for the function body, including the arguments in the new scope. *)
     let scopes = make_scope () :: scopes in
     add_args_to_scopes scopes args;
-    typecheck_block fn_table scopes ret_type name args stmt decls stmts
+    typecheck_block fn_table scopes ret_type name args decls stmts
   | _ -> raise (TypeError "A function body must begin with a block statement")
 ;;
 

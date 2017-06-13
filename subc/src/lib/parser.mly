@@ -35,7 +35,7 @@ declaration:
   | t = type_specifier; id = ID
     { Ast.VariableDeclaration (t, id) }
   | t = type_specifier; id = ID; LEFT_BRACKET; size = INT; RIGHT_BRACKET
-    { Ast.ArrayDeclaration (t, id, size) }
+    { Ast.ArrayDeclaration (Ast.Array t, id, size) }
   | t = type_specifier; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN
     { Ast.FunctionDeclaration (t, id, args) }
   | VOID_LIT; id = ID; LEFT_PAREN; args = parameter_types; RIGHT_PAREN
@@ -51,9 +51,9 @@ type_specifier:
 
 variable_signature:
   | t = type_specifier; id = ID
-    { (t, id, false) }
+    { (t, id) }
   | t = type_specifier; id = ID; LEFT_BRACKET; RIGHT_BRACKET
-    { (t, id, true) }
+    { (Ast.Array t, id) }
   ;
 
 parameter_types:
@@ -67,7 +67,7 @@ local_declaration:
   | t = type_specifier; id = ID; SEMICOLON
     { Ast.VariableDeclaration (t, id) }
   | t = type_specifier; id = ID; LEFT_BRACKET; size = INT; RIGHT_BRACKET; SEMICOLON
-    { Ast.ArrayDeclaration (t, id, size) }
+    { Ast.ArrayDeclaration (Ast.Array t, id, size) }
   ;
 
 declaration_list:

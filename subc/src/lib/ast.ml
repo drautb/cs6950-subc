@@ -5,11 +5,12 @@ type subc_type =
   | Int
   | Char
   | Pointer of subc_type
+  | Array of subc_type
 [@@deriving sexp]
 
 type arg_list =
   | ArgVoid
-  | ArgList of (subc_type * string * bool) list
+  | ArgList of (subc_type * string) list
 [@@deriving sexp]
 
 type declaration =
@@ -66,4 +67,8 @@ type ast =
 let string_of_ast ast =
   match ast with
   | Ast prog_list -> List.to_string ~f:(fun elt -> Sexp.to_string (sexp_of_subc_unit elt)) prog_list
+;;
+
+let string_of_subc_type subc_type =
+  Sexp.to_string (sexp_of_subc_type subc_type)
 ;;

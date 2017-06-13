@@ -45,15 +45,15 @@ let embedded_tests = [
 
   ("basic int array declaration",
    "int arr[5];",
-   Ast [Declaration (ArrayDeclaration (Int, "arr", 5))]);
+   Ast [Declaration (ArrayDeclaration (Array Int, "arr", 5))]);
 
   ("int pointer array declaration",
    "int* arr[10];",
-   Ast [Declaration (ArrayDeclaration ((Pointer Int), "arr", 10))]);
+   Ast [Declaration (ArrayDeclaration (Array (Pointer Int), "arr", 10))]);
 
   ("multi-level char pointer array declaration",
    "char*** letters[256];",
-   Ast [Declaration (ArrayDeclaration ((Pointer (Pointer (Pointer Char))), "letters", 256))]);
+   Ast [Declaration (ArrayDeclaration (Array (Pointer (Pointer (Pointer Char))), "letters", 256))]);
 
   (* -----------------------------------------------------------------
      Function Declarations *)
@@ -65,8 +65,8 @@ let embedded_tests = [
    "int main(int argc, char* argv[]);",
    Ast [Declaration
           (FunctionDeclaration
-             (Int, "main", (ArgList [(Int, "argc", false);
-                                     ((Pointer Char), "argv", true)])))])
+             (Int, "main", (ArgList [(Int, "argc");
+                                     (Array (Pointer Char), "argv")])))])
 ];;
 
 let ast_tests =

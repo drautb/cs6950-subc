@@ -13,12 +13,12 @@ int sum(int n1, int n2) {
 
 ((Declaration (FunctionDeclaration
                Int "sum"
-               (ArgList ((Int "n1" false)
-                         (Int "n2" false)))))
+               (ArgList ((Int "n1")
+                         (Int "n2")))))
  (FunctionDefinition
   Int "main"
-  (ArgList ((Int "argc" false)
-            ((Pointer Char) "argv" true)))
+  (ArgList ((Int "argc")
+            ((Array (Pointer Char)) "argv")))
   (Block
    ()
    ((Return
@@ -28,8 +28,8 @@ int sum(int n1, int n2) {
         (IntConst 5))))))))
  (FunctionDefinition
   Int "sum"
-  (ArgList ((Int "n1" false)
-            (Int "n2" false)))
+  (ArgList ((Int "n1")
+            (Int "n2")))
   (Block
    ()
    ((Return

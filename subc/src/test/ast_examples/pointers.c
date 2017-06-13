@@ -14,8 +14,8 @@ int main(int argc, char* argv[]) {
 
 ((FunctionDefinition
   Int "main"
-  (ArgList ((Int "argc" false)
-            ((Pointer Char) "argv" true)))
+  (ArgList ((Int "argc")
+            ((Array (Pointer Char)) "argv")))
   (Block
    ((VariableDeclaration Char "c")
     (VariableDeclaration (Pointer Char) "pc")
