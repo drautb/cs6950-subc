@@ -11,6 +11,18 @@ let make_fn_table () =
   Hashtbl.create ~hashable:String.hashable ()
 ;;
 
+let lookup_fn fn_table name =
+  Hashtbl.find fn_table name
+;;
+
+(* Saves an entry to the function table. defined and valid_return are just flags
+   that indicate whether or not a definition for this function has already been
+   found, and whether or not the function has a valid return statement if it is
+   a non-void function, respectively. *)
+let save_fn fn_table name ret_type args (defined : bool) (valid_return : bool) =
+  Hashtbl.set fn_table ~key:name ~data:(ret_type, args, defined, valid_return)
+;;
+
 let make_scope () =
   Hashtbl.create ~hashable:String.hashable ()
 ;;
@@ -73,9 +85,9 @@ let ensure_unique_parameter_names (fn_name : string) (arg_list : arg_list) =
 
 (* Ensures that correctly defined main function is present. *)
 let validate_main_fn fn_table =
-  match Hashtbl.find fn_table "main" with
+  match lookup_fn fn_table "main" with
   | None -> raise (TypeError "No 'main' function declared or defined")
-  | Some (ret_type, args, defined) ->
+  | Some (ret_type, args, defined, _) ->
     match ret_type with
     | Int -> (match compare_arglists args main_fn_arglist with
         | true -> (match defined with
@@ -87,7 +99,7 @@ let validate_main_fn fn_table =
 
 let typecheck_function_declaration fn_table ret_type name args =
   (* A function can only be declared once. *)
-  let _ = match Hashtbl.find fn_table name with
+  let _ = match lookup_fn fn_table name with
   | None -> ()
   | Some _ -> raise (TypeError (sprintf "Function '%s' has already been declared" name)) in
 
@@ -95,7 +107,7 @@ let typecheck_function_declaration fn_table ret_type name args =
   ensure_unique_parameter_names name args;
 
   (* Store the function in the table. *)
-  Hashtbl.set fn_table ~key:name ~data:(ret_type, args, false)
+  save_fn fn_table name ret_type args false false
 ;;
 
 let typecheck_variable_declaration scopes var_type id =
@@ -119,39 +131,67 @@ let typecheck_declaration fn_table scopes declaration =
     typecheck_function_declaration fn_table ret_type name args
 ;;
 
+let typecheck_expression fn_table _ ret_type name args expr =
+  match expr with
+   | Equal (_, _) -> raise (TypeError "return expression does not conform to declared return type")
+   | _ -> save_fn fn_table name ret_type args false true
+;;
 
-let typecheck_return fn_table scopes (ret_type : subc_type) ret_expr =
+let typecheck_return fn_table scopes (ret_type : subc_type) name args ret_expr =
   match ret_expr with
   | None -> (match ret_type with
       | Void -> ()
       | _ -> raise (TypeError "non-void function must return a value"))
   | Some expr -> (match ret_type with
       | Void -> raise (TypeError "void function may not return a value")
-      | _ -> (match expr with
-          | Equal (_, _) -> raise (TypeError "return expression does not conform to declared return type")
-          | _ -> ()))
+      | _ -> typecheck_expression fn_table scopes ret_type name args expr)
 ;;
 
-let rec typecheck_statement fn_table scopes ret_type stmt =
+(* Assuming a new scope has already been created, this function typechecks the list
+   of declarations and statements that comprise the block. *)
+let rec typecheck_block fn_table scopes ret_type name args stmt block_decls block_stmts =
+  let _ = List.map block_decls
+      ~f:(fun decl -> typecheck_declaration fn_table scopes decl) in
+  let _ = List.map block_stmts
+      ~f:(fun stmt -> typecheck_statement fn_table scopes ret_type name args stmt) in ()
+
+and typecheck_statement fn_table scopes ret_type name args stmt =
   match stmt with
   | Block (decls, stmts) ->
     (* Start a new scope in a new block *)
     let scopes = make_scope () :: scopes in
-    let _ = List.map decls ~f:(fun decl -> typecheck_declaration fn_table scopes decl) in
-    let _ = List.map stmts ~f:(fun stmt -> typecheck_statement fn_table scopes ret_type stmt) in ()
+    typecheck_block fn_table scopes ret_type name args stmt decls stmts
   | Conditional (_, _, _) -> ()
   | Expression _ -> ()
   | Loop (_, _) -> ()
-  | Return expr -> typecheck_return fn_table scopes ret_type expr
+  | Return expr -> typecheck_return fn_table scopes ret_type name args expr
   | StmtVoid -> ()
+;;
+
+let add_args_to_scopes scopes (arg_list : arg_list) =
+  match arg_list with
+  | ArgVoid -> ()
+  | ArgList args -> let _ = List.map args
+                        ~f:(fun arg -> match arg with
+                            | (var_type, id, _) -> add_to_scope scopes id var_type) in ()
+;;
+
+let typecheck_function_body fn_table scopes ret_type name args stmt =
+  match stmt with
+  | Block (decls, stmts) ->
+    (* Start a new scope for the function body, including the arguments in the new scope. *)
+    let scopes = make_scope () :: scopes in
+    add_args_to_scopes scopes args;
+    typecheck_block fn_table scopes ret_type name args stmt decls stmts
+  | _ -> raise (TypeError "A function body must begin with a block statement")
 ;;
 
 let typecheck_function_definition fn_table scopes ret_type name args stmt =
   (* A function can only be defined once, and if a declaration exists, the return
      type and formal argument list must match in type and number. *)
-  let _ = match Hashtbl.find fn_table name with
+  let _ = match lookup_fn fn_table name with
     | None -> ()
-    | Some (ret_type_decl, args_decl, defined) ->
+    | Some (ret_type_decl, args_decl, defined, _) ->
       (match defined with
        | true ->
          raise (TypeError (sprintf "Function '%s' has already been defined" name))
@@ -167,10 +207,17 @@ let typecheck_function_definition fn_table scopes ret_type name args stmt =
   ensure_unique_parameter_names name args;
 
   (* Ensure that the body of the function typechecks. *)
-  typecheck_statement fn_table scopes ret_type stmt;
+  typecheck_function_body fn_table scopes ret_type name args stmt;
+
+  (* Make sure that the function had a correct return statement if it was non-void *)
+  let _ = match ret_type with
+  | Void -> ()
+  | _ -> (match lookup_fn fn_table name with
+      | Some (_, _, _, true) -> ()
+      | _ -> raise (TypeError (sprintf "Function '%s' must return a value" name))) in
 
   (* Store the function in the function table. *)
-  Hashtbl.set fn_table ~key:name ~data:(ret_type, args, true)
+  save_fn fn_table name ret_type args true true
 ;;
 
 let typecheck_subc_unit fn_table scopes subc_unit =
@@ -183,7 +230,8 @@ let typecheck_subc_unit fn_table scopes subc_unit =
 
 let typecheck_ast fn_table scopes ast =
   let _ = match ast with
-    | Ast unit_list -> List.map unit_list ~f:(fun u -> typecheck_subc_unit fn_table scopes u) in ()
+    | Ast unit_list ->
+      List.map unit_list ~f:(fun u -> typecheck_subc_unit fn_table scopes u) in ()
 ;;
 
 let typecheck ast =

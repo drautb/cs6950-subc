@@ -29,13 +29,18 @@ let assert_type_error name f =
 let accepted_programs =
   List.append (load_programs "accept")
     [
-      (* 'main' function related *)
+      (* 'main' function related checks *)
       ("proper main without declaration",
        "int main(int argc, char* argv[]) { return 0; }");
 
       ("proper main with declaration",
        "int main(int argc, char* argv[]);" ^
        "int main(int argc, char* argv[]) { return 0; }");
+
+      (* Function related checks *)
+      ("void function with no return statement",
+       "int main(int argc, char* argv[]) { return 0; }" ^
+       "void fn(void) { }");
 
       (* Variable declaration/scoping related checks *)
       ("top-level variable shadowed in nested scope",
@@ -49,6 +54,12 @@ let accepted_programs =
        "int main(int argc, char* argv[]) {" ^
        "  int x;" ^
        "  { int x; }" ^
+       "  return 0;" ^
+       "}");
+
+      ("function argument shadowed in nested scope",
+       "int main(int argc, char* argv[]) {" ^
+       "  { int argc; }" ^
        "  return 0;" ^
        "}")
     ]
@@ -107,6 +118,10 @@ let rejected_programs =
        "int main(int argc, char* argv[]) { return 0; }" ^
        "int fn(void) { return; }");
 
+      ("non-void function lacks return statement",
+       "int main(int argc, char* argv[]) { return 0; }" ^
+       "int* fn(void) { }");
+
       ("void function returns a value",
        "int main(int argc, char* argv[]) { return 0; }" ^
        "void fn(void) { return 1; }");
@@ -121,6 +136,12 @@ let rejected_programs =
        "int main(int argc, char* argv[]) {" ^
        "  int x;" ^
        "  int x;" ^
+       "  return 0;" ^
+       "}");
+
+      ("function argument redefined in first scope of definition",
+       "int main(int argc, char* argv[]) {" ^
+       "  int argc;" ^
        "  return 0;" ^
        "}");
 
