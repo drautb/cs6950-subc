@@ -102,6 +102,14 @@ let accepted_programs =
           pc = &c;
           *pc = 'y';
           return 0;
+        }");
+
+      ("logical operators",
+       "int main(int argc, char* argv[]) {
+          if (!(1 == 1) || 2 != 2 && 3 == 3) {
+            return 0;
+          }
+          return 1;
         }")
     ]
 
@@ -280,6 +288,36 @@ let rejected_programs =
           int x;
           x = 0;
           *x = 5;
+          return 0;
+        }");
+
+      ("logical or with non-bool lhs",
+       "int main(int argc, char* argv[]) {
+          5 || 1 == 1;
+          return 0;
+        }");
+
+      ("logical or with non-bool rhs",
+       "int main(int argc, char* argv[]) {
+          1 == 1 || 5;
+          return 0;
+        }");
+
+      ("logical and with non-bool lhs",
+       "int main(int argc, char* argv[]) {
+          5 && 1 == 1;
+          return 0;
+        }");
+
+      ("logical and with non-bool rhs",
+       "int main(int argc, char* argv[]) {
+          1 == 1 && 5;
+          return 0;
+        }");
+
+      ("logical not with non-bool expr",
+       "int main(int argc, char* argv[]) {
+          !5;
           return 0;
         }")
     ]

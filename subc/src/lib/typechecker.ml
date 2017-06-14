@@ -159,19 +159,31 @@ let typecheck_declaration fn_table scopes declaration =
 let rec typecheck_expression fn_table scopes (expr : expression) : subc_type =
   match expr with
   | Assignment (lhs, rhs) -> begin
-    let lhs_type = typecheck_expression fn_table scopes lhs in
-    let rhs_type = typecheck_expression fn_table scopes rhs in
-    let _ = match lhs_type with
-      | Array _ -> raise (TypeError "An array is not a valid left-hand side in an assignment")
-      | _ -> () in
-    let _ = match lhs with
-      | Id _ | ArrayRef (_, _) | Dereference _ -> ()
-      | _ -> raise (TypeError "Left-hand side of assignment is not an assignable expression.") in
-    match compatible_types lhs_type rhs_type with
+      let lhs_type = typecheck_expression fn_table scopes lhs in
+      let rhs_type = typecheck_expression fn_table scopes rhs in
+      let _ = match lhs_type with
+        | Array _ -> raise (TypeError "An array is not a valid left-hand side in an assignment")
+        | _ -> () in
+      let _ = match lhs with
+        | Id _ | ArrayRef (_, _) | Dereference _ -> ()
+        | _ -> raise (TypeError "Left-hand side of assignment is not an assignable expression.") in
+      match compatible_types lhs_type rhs_type with
       | true -> Void
       | false -> raise (TypeError "Right-hand side of assignment is not compatible with left-hand side")
     end
+  | LogicalOr (lhs, rhs)
+  | LogicalAnd (lhs, rhs) -> begin
+      let lhs_type = typecheck_expression fn_table scopes lhs in
+      let rhs_type = typecheck_expression fn_table scopes rhs in
+      match lhs_type, rhs_type with
+      | Bool, Bool -> Bool
+      | _ -> raise (TypeError "Operands to logical and operators must be of type bool")
+    end
+  | LogicalNot expr -> (match typecheck_expression fn_table scopes expr with
+      | Bool -> Bool
+      | _ -> raise (TypeError "Operand to logical not must be of type bool"))
   | Equal (_, _) -> Bool
+  | NotEqual (_, _) -> Bool
   | Id name ->
     (match lookup_id scopes name with
      | None -> raise (TypeError (sprintf "Variable '%s' can't be used before being declared" name))
