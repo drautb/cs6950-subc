@@ -94,6 +94,15 @@ let accepted_programs =
           return 0;
         }");
 
+      ("assignment to char pointer",
+       "int main(int argc, char* argv[]) {
+          char c;
+          char* pc;
+          c = 'z';
+          pc = &c;
+          *pc = 'y';
+          return 0;
+        }")
     ]
 
 let rejected_programs =
@@ -225,8 +234,45 @@ let rejected_programs =
         }");
 
       (* Expression related checks *)
+      ("assignment to constant",
+       "int main(int argc, char* argv[]) {
+          5 = 42;
+          return 0;
+        }");
 
+      ("assignment to array variable",
+       "int main(int argc, char* argv[]) {
+          int arr[5];
+          arr = 42;
+          return 0;
+        }");
 
+      ("mismatched pointer level assignment",
+       "int main(int argc, char* argv[]) {
+          int x;
+          int* px;
+          int** ppx;
+          x = 0;
+          px = &x;
+          ppx = &px;
+          *ppx = 42;
+          return 0;
+        }");
+
+      ("variable use before declaration",
+       "int main(int argc, char* argv[]) {
+          int x;
+          x = y;
+          return 0;
+        }");
+
+      ("dereference a non-pointer identifier",
+       "int main(int argc, char* argv[]) {
+          int x;
+          x = 0;
+          *x = 5;
+          return 0;
+        }")
     ]
 
 let typechecker_tests =

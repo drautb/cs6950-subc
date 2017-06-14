@@ -29,12 +29,14 @@ let make_scope () =
 
 (* Given a list of scope hashes and an identifier, lookup the id in the scopes
    and return it's type. *)
-let rec lookup_id scopes (id : string) : subc_type option =
+let rec lookup_id
+    (scopes : (String.t, subc_type) Hashtbl.t list)
+    (id : string) : subc_type option =
   match scopes with
   | [] -> None
   | scope :: rest -> (match Hashtbl.find scope id with
       | None -> (lookup_id rest id)
-      | Some id_type -> id_type)
+      | Some id_type -> Some id_type)
 ;;
 
 let add_to_scope scopes (id : string) (id_type : subc_type) =
@@ -154,10 +156,30 @@ let typecheck_declaration fn_table scopes declaration =
     typecheck_function_declaration fn_table ret_type name args
 ;;
 
-let typecheck_expression _ _ (expr : expression) : subc_type =
+let rec typecheck_expression fn_table scopes (expr : expression) : subc_type =
   match expr with
-   | Equal (_, _) -> Bool
-   | _ -> Int
+  | Assignment (lhs, rhs) -> begin
+    let lhs_type = typecheck_expression fn_table scopes lhs in
+    let rhs_type = typecheck_expression fn_table scopes rhs in
+    let _ = match lhs with
+      | Id _ | ArrayRef (_, _) | Dereference _ -> ()
+      | _ -> raise (TypeError "Left-hand side of assignment is not an assignable expression.") in
+    match compatible_types lhs_type rhs_type with
+      | true -> Void
+      | false -> raise (TypeError "Right-hand side of assignment is not compatible with left-hand side")
+    end
+  | Equal (_, _) -> Bool
+  | Id name ->
+    (match lookup_id scopes name with
+     | None -> raise (TypeError (sprintf "Variable '%s' can't be used before being declared" name))
+     | Some id_type -> id_type)
+  | Dereference expr ->
+      (match typecheck_expression fn_table scopes expr with
+        | Pointer pointer_type -> pointer_type
+        | _ -> raise (TypeError (sprintf "Dereference operator may only be applied to a pointer")))
+  | CharConst _ -> Char
+  | AddressOf expr -> Pointer (typecheck_expression fn_table scopes expr)
+  | _ -> Int
 ;;
 
 let typecheck_return fn_table scopes (ret_type : subc_type) name ret_expr =
