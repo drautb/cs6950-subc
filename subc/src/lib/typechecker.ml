@@ -155,7 +155,6 @@ let typecheck_declaration fn_table scopes declaration =
 ;;
 
 let typecheck_expression _ _ (expr : expression) : subc_type =
-  (* TODO *)
   match expr with
    | Equal (_, _) -> Bool
    | _ -> Int
@@ -182,18 +181,27 @@ let rec typecheck_block fn_table scopes ret_type name args block_decls block_stm
   let _ = List.map block_stmts
       ~f:(fun stmt -> typecheck_statement fn_table scopes ret_type name args stmt) in ()
 
-and typecheck_statement fn_table scopes ret_type name args stmt =
+and typecheck_statement fn_table scopes ret_type name args stmt : unit =
   match stmt with
   | Block (decls, stmts) ->
     (* Start a new scope in a new block *)
     let scopes = make_scope () :: scopes in
     typecheck_block fn_table scopes ret_type name args decls stmts
-  | Conditional (expr, _, _) ->
+  | Conditional (expr, then_stmt, else_stmt) ->
     (match typecheck_expression fn_table scopes expr with
-     | Bool -> ()
+     | Bool -> begin
+         let _ = typecheck_statement fn_table scopes ret_type name args then_stmt in
+         match else_stmt with
+         | None -> ()
+         | Some stmt -> typecheck_statement fn_table scopes ret_type name args stmt
+       end
      | _ -> raise (TypeError "Conditional expression must be of type bool"))
-  | Expression _ -> ()
-  | Loop (_, _) -> ()
+  | Expression expr ->
+    let _ = typecheck_expression fn_table scopes expr in ()
+  | Loop (expr, stmt) ->
+    (match typecheck_expression fn_table scopes expr with
+     | Bool -> typecheck_statement fn_table scopes ret_type name args stmt
+     | _ -> raise (TypeError "Loop expression must be of type bool"))
   | Return expr -> typecheck_return fn_table scopes ret_type name expr
   | StmtVoid -> ()
 ;;

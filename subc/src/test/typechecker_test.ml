@@ -70,7 +70,30 @@ let accepted_programs =
        "    return 1;" ^
        "  }"^
        "  return 0;" ^
-       "}")
+       "}");
+
+      (* Expression related checks *)
+      ("assignment to int variable",
+       "int main(int argc, char* argv[]) {" ^
+       "  int x;" ^
+       "  x = 5;" ^
+       "  return 0;" ^
+       "}");
+
+      ("assignment to char variable",
+       "int main(int argc, char* arg[]) {" ^
+       "  char c;" ^
+       "  c = 'x';" ^
+       "  return 0;" ^
+       "}");
+
+      ("assignment to array index",
+       "int main(int argc, char* argv[]) {
+          int arr[5];
+          arr[3] = 42;
+          return 0;
+        }");
+
     ]
 
 let rejected_programs =
@@ -166,7 +189,44 @@ let rejected_programs =
        "    return 5;" ^
        "  }" ^
        "  return 0;" ^
-       "}")
+       "}");
+
+      ("loop with non-bool test expression",
+       "int main(int argc, char* argv[]) {" ^
+       "  while (3) {}" ^
+       "  return 0;" ^
+       "}");
+
+      ("conditional with type error in then branch",
+       "int main(int argc, char* argv[]) {" ^
+       "  if (1 == 1) {" ^
+       "    int x;" ^
+       "    int x;" ^
+       "  }" ^
+       "  return 0;" ^
+       "}");
+
+      ("conditional with type error in else branch",
+       "int main(int argc, char* argv[]) {" ^
+       "  if (1 == 1) {} else {" ^
+       "    int x;" ^
+       "    int x;" ^
+       "  }" ^
+       "  return 0;" ^
+       "}");
+
+      ("loop with type error in body ",
+       "int main(int argc, char* argv[]) {" ^
+       "  while (1 == 1) {" ^
+       "    int x;" ^
+       "    int x;" ^
+       "  }" ^
+       "  return 0;" ^
+       "}");
+
+      (* Expression related checks *)
+
+
     ]
 
 let typechecker_tests =
