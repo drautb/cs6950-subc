@@ -161,6 +161,9 @@ let rec typecheck_expression fn_table scopes (expr : expression) : subc_type =
   | Assignment (lhs, rhs) -> begin
     let lhs_type = typecheck_expression fn_table scopes lhs in
     let rhs_type = typecheck_expression fn_table scopes rhs in
+    let _ = match lhs_type with
+      | Array _ -> raise (TypeError "An array is not a valid left-hand side in an assignment")
+      | _ -> () in
     let _ = match lhs with
       | Id _ | ArrayRef (_, _) | Dereference _ -> ()
       | _ -> raise (TypeError "Left-hand side of assignment is not an assignable expression.") in

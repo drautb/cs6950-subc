@@ -247,6 +247,15 @@ let rejected_programs =
           return 0;
         }");
 
+      ("assignment from array to array",
+       "int main(int argc, char* argv[]) {
+          int a1[5];
+          int a2[5];
+          a1[0] = 42;
+          a2 = a1;
+          return 0;
+        }");
+
       ("mismatched pointer level assignment",
        "int main(int argc, char* argv[]) {
           int x;
