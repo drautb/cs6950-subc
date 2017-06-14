@@ -34,58 +34,58 @@ let accepted_programs =
        "int main(int argc, char* argv[]) { return 0; }");
 
       ("proper main with declaration",
-       "int main(int argc, char* argv[]);" ^
-       "int main(int argc, char* argv[]) { return 0; }");
+       "int main(int argc, char* argv[]);
+        int main(int argc, char* argv[]) { return 0; }");
 
       (* Function related checks *)
       ("void function with no return statement",
-       "int main(int argc, char* argv[]) { return 0; }" ^
-       "void fn(void) { }");
+       "int main(int argc, char* argv[]) { return 0; }
+        void fn(void) { }");
 
       (* Variable declaration/scoping related checks *)
       ("top-level variable shadowed in nested scope",
-       "int x;" ^
-       "int main(int argc, char* argv[]) {" ^
-       "  int x;" ^
-       "  return 0;" ^
-       "}");
+       "int x;
+        int main(int argc, char* argv[]) {
+          int x;
+          return 0;
+        }");
 
       ("variable shadowed in nested scope",
-       "int main(int argc, char* argv[]) {" ^
-       "  int x;" ^
-       "  { int x; }" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          int x;
+          { int x; }
+          return 0;
+        }");
 
       ("function argument shadowed in nested scope",
-       "int main(int argc, char* argv[]) {" ^
-       "  { int argc; }" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          { int argc; }
+          return 0;
+        }");
 
       (* Statement related checks *)
       ("conditional test expression is boolean",
-       "int main(int argc, char* argv[]) {" ^
-       "  if (argc == 5) {" ^
-       "    return 1;" ^
-       "  }"^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          if (argc == 5) {
+            return 1;
+          }
+          return 0;
+        }");
 
       (* Expression related checks *)
       ("assignment to int variable",
-       "int main(int argc, char* argv[]) {" ^
-       "  int x;" ^
-       "  x = 5;" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          int x;
+          x = 5;
+          return 0;
+        }");
 
       ("assignment to char variable",
-       "int main(int argc, char* arg[]) {" ^
-       "  char c;" ^
-       "  c = 'x';" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* arg[]) {
+          char c;
+          c = 'x';
+          return 0;
+        }");
 
       ("assignment to array index",
        "int main(int argc, char* argv[]) {
@@ -114,115 +114,115 @@ let rejected_programs =
 
       (* General function checks *)
       ("duplicate function declaration",
-       "void fn(void);" ^
-       "void fn(void);" ^
-       "int main(int argc, char* argv[]) { return 0; }");
+       "void fn(void);
+        void fn(void);
+        int main(int argc, char* argv[]) { return 0; }");
 
       ("duplicate function definition",
-       "void fn(void) { return; }" ^
-       "void fn(void) { return; }" ^
-       "int main(int argc, char* argv[]) { return 0; }");
+       "void fn(void) { return; }
+        void fn(void) { return; }
+        int main(int argc, char* argv[]) { return 0; }");
 
       ("function definition precedes declaration",
-       "void fn(void) { return; }" ^
-       "void fn(void);" ^
-       "int main(int argc, char* argv[]) { return 0; }");
+       "void fn(void) { return; }
+        void fn(void);
+        int main(int argc, char* argv[]) { return 0; }");
 
       ("function definition does not match declaration return type",
-       "void fn(void);" ^
-       "int fn(void) { return 0; }" ^
-       "int main(int argc, char* argv[]) { return 0; }");
+       "void fn(void);
+        int fn(void) { return 0; }
+        int main(int argc, char* argv[]) { return 0; }");
 
       ("function definition does not match declaration argument list",
-       "void fn(void);" ^
-       "void fn(int n) { return; }" ^
-       "int main(int argc, char* argv[]) { return 0; }");
+       "void fn(void);
+        void fn(int n) { return; }
+        int main(int argc, char* argv[]) { return 0; }");
 
       ("function declaration duplicates formal argument names",
-       "int main(int argc, char* argc[]);" ^
-       "int main(int argc, char* argv[]) { return 0; }");
+       "int main(int argc, char* argc[]);
+        int main(int argc, char* argv[]) { return 0; }");
 
       ("function definition duplicates formal argument names",
-       "int main(int argc, char* argv[]);" ^
-       "int main(int argc, char* argc[]) { return 0; }");
+       "int main(int argc, char* argv[]);
+        int main(int argc, char* argc[]) { return 0; }");
 
       ("non-void function returns void",
-       "int main(int argc, char* argv[]) { return 0; }" ^
-       "int fn(void) { return; }");
+       "int main(int argc, char* argv[]) { return 0; }
+        int fn(void) { return; }");
 
       ("non-void function lacks return statement",
-       "int main(int argc, char* argv[]) { return 0; }" ^
-       "int* fn(void) { }");
+       "int main(int argc, char* argv[]) { return 0; }
+        int* fn(void) { }");
 
       ("void function returns a value",
-       "int main(int argc, char* argv[]) { return 0; }" ^
-       "void fn(void) { return 1; }");
+       "int main(int argc, char* argv[]) { return 0; }
+        void fn(void) { return 1; }");
 
       (* Variable declaration/scope checks *)
       ("variable redefined at top-level",
-       "int x;" ^
-       "int x;" ^
-       "int main(int argc, char* argv[]) { return 0; }");
+       "int x;
+        int x;
+        int main(int argc, char* argv[]) { return 0; }");
 
       ("variable redefined in same scope",
-       "int main(int argc, char* argv[]) {" ^
-       "  int x;" ^
-       "  int x;" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          int x;
+          int x;
+          return 0;
+        }");
 
       ("function argument redefined in first scope of definition",
-       "int main(int argc, char* argv[]) {" ^
-       "  int argc;" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          int argc;
+          return 0;
+        }");
 
       (* Array size declaration check. (Parser prevents negative sizes) *)
       ("array declared with zero size",
-       "int x[0];" ^
-       "int main(int argc, char* argv[]) { return 0; }");
+       "int x[0];
+        int main(int argc, char* argv[]) { return 0; }");
 
       (* Statement related checks *)
       ("conditional with non-bool test expression",
-       "int main(int argc, char* argv[]) {" ^
-       "  if (5) {" ^
-       "    return 5;" ^
-       "  }" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          if (5) {
+            return 5;
+          }
+          return 0;
+        }");
 
       ("loop with non-bool test expression",
-       "int main(int argc, char* argv[]) {" ^
-       "  while (3) {}" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          while (3) {}
+          return 0;
+        }");
 
       ("conditional with type error in then branch",
-       "int main(int argc, char* argv[]) {" ^
-       "  if (1 == 1) {" ^
-       "    int x;" ^
-       "    int x;" ^
-       "  }" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          if (1 == 1) {
+            int x;
+            int x;
+          }
+          return 0;
+        }");
 
       ("conditional with type error in else branch",
-       "int main(int argc, char* argv[]) {" ^
-       "  if (1 == 1) {} else {" ^
-       "    int x;" ^
-       "    int x;" ^
-       "  }" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          if (1 == 1) {} else {
+            int x;
+            int x;
+          }
+          return 0;
+        }");
 
       ("loop with type error in body ",
-       "int main(int argc, char* argv[]) {" ^
-       "  while (1 == 1) {" ^
-       "    int x;" ^
-       "    int x;" ^
-       "  }" ^
-       "  return 0;" ^
-       "}");
+       "int main(int argc, char* argv[]) {
+          while (1 == 1) {
+            int x;
+            int x;
+          }
+          return 0;
+        }");
 
       (* Expression related checks *)
 
