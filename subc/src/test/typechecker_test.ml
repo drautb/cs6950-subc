@@ -148,6 +148,25 @@ let accepted_programs =
           c / d; 0 / 0; d / 0; 0 / d;
           return 0;
         }");
+
+      ("casting pointers",
+       "int main(int argc, char* argv[]) {
+          int n;
+          int* pn;
+          char* pcn;
+          n = 5;
+          pn = &n;
+          pcn = (char*)pn;
+          return 0;
+        }");
+
+      ("casting arrays",
+       "int main(int argc, char* argv[]) {
+          int arr[5];
+          char* pc;
+          pc = (char*)arr;
+          return 0;
+        }");
     ]
 
 let rejected_programs =
@@ -495,6 +514,14 @@ let rejected_programs =
        "int main(int argc, char* argv[]) {
           int* p;
           1 / p;
+          return 0;
+        }");
+
+      ("subject of cast doesn't typecheck",
+       "int main(int argc, char* argv[]) {
+          int arr[5];
+          char* pc;
+          pc = (char*) arr == 1;
           return 0;
         }");
     ]

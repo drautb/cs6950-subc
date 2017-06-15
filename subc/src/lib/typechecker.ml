@@ -192,6 +192,8 @@ let rec typecheck_expression fn_table scopes (expr : expression) : subc_type =
   | Subtract (lhs, rhs)
   | Multiply (lhs, rhs)
   | Divide (lhs, rhs) -> ensure_int_compatibility fn_table scopes lhs rhs Int
+  | Cast (new_type, expr) ->
+    let _ = typecheck_expression fn_table scopes expr in new_type
   | Id name ->
     (match lookup_id scopes name with
      | None -> raise (TypeError (sprintf "Variable '%s' can't be used before being declared" name))
