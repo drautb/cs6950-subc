@@ -167,6 +167,16 @@ let accepted_programs =
           pc = (char*)arr;
           return 0;
         }");
+
+      ("array reference",
+       "int main(int argc, char* argv[]) {
+          int arr[50];
+          int i;
+          char c;
+          i = arr[2];
+          c = arr[17];
+          return 0;
+        }");
     ]
 
 let rejected_programs =
@@ -522,6 +532,21 @@ let rejected_programs =
           int arr[5];
           char* pc;
           pc = (char*) arr == 1;
+          return 0;
+        }");
+
+      ("array ref with non-int-compatible index",
+       "int main(int argc, char* argv[]) {
+          int arr[50];
+          arr[1 == 1];
+          return 0;
+        }");
+
+      ("array reference on non-array identifier",
+       "int main(int argc, char* argv[]) {
+          int x;
+          int y;
+          x = y[5];
           return 0;
         }");
     ]

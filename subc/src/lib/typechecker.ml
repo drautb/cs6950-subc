@@ -194,6 +194,15 @@ let rec typecheck_expression fn_table scopes (expr : expression) : subc_type =
   | Divide (lhs, rhs) -> ensure_int_compatibility fn_table scopes lhs rhs Int
   | Cast (new_type, expr) ->
     let _ = typecheck_expression fn_table scopes expr in new_type
+  | ArrayRef (array_expr, idx_expr) -> begin
+      let idx_type = typecheck_expression fn_table scopes idx_expr in
+      let _ = match compatible_types idx_type Int with
+        | true -> ()
+        | false -> raise (TypeError "array index expression does not have a type compatible with int") in
+      match typecheck_expression fn_table scopes array_expr with
+      | Array entry_type -> entry_type
+      | _ -> raise (TypeError "identifier is not an array")
+    end
   | Id name ->
     (match lookup_id scopes name with
      | None -> raise (TypeError (sprintf "Variable '%s' can't be used before being declared" name))
