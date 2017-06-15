@@ -215,13 +215,18 @@ let rec typecheck_expression fn_table scopes (expr : expression) : subc_type =
     (match lookup_id scopes name with
      | None -> raise (TypeError (sprintf "Variable '%s' can't be used before being declared" name))
      | Some id_type -> id_type)
+  | IntConst _ -> Int
+  | CharConst _ -> Char
+  | AddressOf expr -> Pointer (typecheck_expression fn_table scopes expr)
   | Dereference expr ->
       (match typecheck_expression fn_table scopes expr with
         | Pointer pointer_type -> pointer_type
         | _ -> raise (TypeError (sprintf "Dereference operator may only be applied to a pointer")))
-  | CharConst _ -> Char
-  | AddressOf expr -> Pointer (typecheck_expression fn_table scopes expr)
-  | _ -> Int
+  | Negate expr ->
+    let expr_type = typecheck_expression fn_table scopes expr in
+    match compatible_types expr_type Int with
+    | true -> Int
+    | false -> raise (TypeError "Cannot negate an expression that has type incompatible with int")
 
 and ensure_int_compatibility fn_table scopes
     (lhs : expression)

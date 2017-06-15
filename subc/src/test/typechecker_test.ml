@@ -195,6 +195,14 @@ let accepted_programs =
           x = my_fn(x, px, arr, c);
           return 0;
         }");
+
+      ("numeric negation",
+       "int main(int argc, char* argv[]) {
+          int n;
+          int c;
+          -n == -c;
+          return 0;
+        }");
     ]
 
 let rejected_programs =
@@ -602,6 +610,14 @@ let rejected_programs =
           x = some_fn(x);
           return 0;
         }");
+
+      ("negating a non-int-compatible type",
+       "int main(int argc, char* argv[]) {
+          int array[5];
+          -array;
+          return 0;
+        }");
+
     ]
 
 let typechecker_tests =
