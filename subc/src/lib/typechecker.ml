@@ -182,8 +182,12 @@ let rec typecheck_expression fn_table scopes (expr : expression) : subc_type =
   | LogicalNot expr -> (match typecheck_expression fn_table scopes expr with
       | Bool -> Bool
       | _ -> raise (TypeError "Operand to logical not must be of type bool"))
-  | Equal (_, _) -> Bool
-  | NotEqual (_, _) -> Bool
+  | Equal (lhs, rhs)
+  | NotEqual (lhs, rhs)
+  | LessThan (lhs, rhs)
+  | LessThanEqual (lhs, rhs)
+  | GreaterThan (lhs, rhs)
+  | GreaterThanEqual (lhs, rhs) -> ensure_int_compatibility fn_table scopes lhs rhs Bool
   | Id name ->
     (match lookup_id scopes name with
      | None -> raise (TypeError (sprintf "Variable '%s' can't be used before being declared" name))
@@ -195,6 +199,17 @@ let rec typecheck_expression fn_table scopes (expr : expression) : subc_type =
   | CharConst _ -> Char
   | AddressOf expr -> Pointer (typecheck_expression fn_table scopes expr)
   | _ -> Int
+
+and ensure_int_compatibility fn_table scopes
+    (lhs : expression)
+    (rhs : expression)
+    (overall : subc_type) : subc_type =
+  let lhs_type = typecheck_expression fn_table scopes lhs in
+  let rhs_type = typecheck_expression fn_table scopes rhs in
+  let _ = match compatible_types lhs_type Int, compatible_types rhs_type Int with
+    | true, true -> ()
+    | _, _ -> raise (TypeError "Operands to comparison and mathematic operators must be compatible with type int") in
+  overall
 ;;
 
 let typecheck_return fn_table scopes (ret_type : subc_type) name ret_expr =

@@ -110,7 +110,33 @@ let accepted_programs =
             return 0;
           }
           return 1;
-        }")
+        }");
+
+      ("equal and not-equal int compatibility",
+       "int main(int argc, char* argv[]) {
+          char c;
+          char d;
+          c == d;
+          c == 42;
+          42 == d;
+          42 == 42;
+          c != d;
+          c != 42;
+          42 != d;
+          42 != 42;
+          return 0;
+        }");
+
+      ("comparison operator int compatibility",
+       "int main(int argc, char* argv[]) {
+          char c;
+          char d;
+          c < d; 0 < 0; c < 0; 0 < c;
+          c <= d; 0 <= 0; c <= 0; 0 <= c;
+          c > d; 0 > 0; d > 0; 0 > d;
+          c >= d; 0 >= 0; c >= 0; 0 >= d;
+          return 0;
+        }");
     ]
 
 let rejected_programs =
@@ -319,7 +345,91 @@ let rejected_programs =
        "int main(int argc, char* argv[]) {
           !5;
           return 0;
-        }")
+        }");
+
+      ("equal with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          p == 1;
+          return 0;
+        }");
+
+      ("equal with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          1 == p;
+          return 0;
+        }");
+
+      ("not equal with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          p != 1;
+          return 0;
+        }");
+
+      ("not equal with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          1 != p;
+          return 0;
+        }");
+
+      ("less than with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int arr[5];
+          arr < 5;
+          return 0;
+        }");
+
+      ("less than with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          5 < p;
+          return 0;
+        }");
+
+      ("less than or equal with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          p <= 5;
+          return 0;
+        }");
+
+      ("less than or equal with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          5 <= p;
+          return 0;
+        }");
+
+      ("greater than with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int arr[5];
+          arr > 5;
+          return 0;
+        }");
+
+      ("greater than with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          5 > p;
+          return 0;
+        }");
+
+      ("greater than or equal with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          p >= 5;
+          return 0;
+        }");
+
+      ("greater than or equal with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          5 >= p;
+          return 0;
+        }");
     ]
 
 let typechecker_tests =
