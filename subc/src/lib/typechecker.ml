@@ -203,6 +203,14 @@ let rec typecheck_expression fn_table scopes (expr : expression) : subc_type =
       | Array entry_type -> entry_type
       | _ -> raise (TypeError "identifier is not an array")
     end
+  | FunctionCall (name_expr, actual_args) -> begin
+      match name_expr with
+      | Id fn_name -> (match lookup_fn fn_table fn_name with
+          | Some (ret_type, args, _, _) ->
+            let _ = ensure_argument_compatibility fn_table scopes args actual_args in ret_type
+          | None -> raise (TypeError (sprintf "No declaration found for function '%s'" fn_name)))
+      | _ -> raise (TypeError "Function name expression in function call is not an identifier")
+    end
   | Id name ->
     (match lookup_id scopes name with
      | None -> raise (TypeError (sprintf "Variable '%s' can't be used before being declared" name))
@@ -225,6 +233,24 @@ and ensure_int_compatibility fn_table scopes
     | true, true -> ()
     | _, _ -> raise (TypeError "Operands to comparison and mathematic operators must be compatible with type int") in
   overall
+
+and ensure_argument_compatibility fn_table scopes
+    (args : arg_list)
+    (actual_args : expression list) : unit =
+  match args with
+  | ArgVoid -> (match List.length actual_args with
+      | 0 -> ()
+      | _ -> raise (TypeError "Function takes no arguments"))
+  | ArgList arg_tuples -> begin
+      let _ = match List.length arg_tuples = List.length actual_args with
+        | true -> ()
+        | false -> raise (TypeError "Function call has a different number of arguments than the function declaration") in
+      let _ = List.map2_exn arg_tuples actual_args
+          ~f:(fun (expected_type, _) arg_expr ->
+              match compatible_types expected_type (typecheck_expression fn_table scopes arg_expr) with
+              | true -> ()
+              | false -> raise (TypeError "One or more actual arguments to function are incompatible with argument types")) in ()
+    end
 ;;
 
 let typecheck_return fn_table scopes (ret_type : subc_type) name ret_expr =

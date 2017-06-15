@@ -177,6 +177,24 @@ let accepted_programs =
           c = arr[17];
           return 0;
         }");
+
+      ("function call",
+       "char my_fn(int n, int* pn, int array[], char character) {
+          array[0] = n + *pn + character;
+          return array[0];
+        }
+
+        int main(int argc, char* argv[]) {
+          int x;
+          int* px;
+          int arr[50];
+          char c;
+          x = 2;
+          px = &x;
+          c = 'c';
+          x = my_fn(x, px, arr, c);
+          return 0;
+        }");
     ]
 
 let rejected_programs =
@@ -547,6 +565,41 @@ let rejected_programs =
           int x;
           int y;
           x = y[5];
+          return 0;
+        }");
+
+      ("function call with non-existent function",
+       "int main(int argc, char* argv[]) {
+          my_fn();
+          return 0;
+        }");
+
+      ("calling a non-identifier as a function",
+       "int main(int argc, char* argv[]) {
+          5(45);
+          return 0;
+        }");
+
+      ("function call with incompatible return type",
+       "int* some_fn(void) {
+          int* p;
+          return p;
+        }
+
+        int main(int argc, char* argv[]) {
+          int x;
+          x = some_fn();
+          return 0;
+        }");
+
+      ("function call with incompatible argument",
+       "int some_fn(int* p) {
+          return 0;
+        }
+
+        int main(int argc, char* argv[]) {
+          int x;
+          x = some_fn(x);
           return 0;
         }");
     ]
