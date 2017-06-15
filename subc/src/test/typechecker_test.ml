@@ -137,6 +137,17 @@ let accepted_programs =
           c >= d; 0 >= 0; c >= 0; 0 >= d;
           return 0;
         }");
+
+      ("arithmetic operator int compatibility",
+       "int main(int argc, char* argv[]) {
+          char c;
+          char d;
+          c + d; 0 + 0; c + 0; 0 + c;
+          c - d; 0 - 0; d - 0; 0 - d;
+          c * d; 0 * 0; c * 0; 0 * c;
+          c / d; 0 / 0; d / 0; 0 / d;
+          return 0;
+        }");
     ]
 
 let rejected_programs =
@@ -428,6 +439,62 @@ let rejected_programs =
        "int main(int argc, char* argv[]) {
           int* p;
           5 >= p;
+          return 0;
+        }");
+
+      ("addition with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          p + 1;
+          return 0;
+        }");
+
+      ("addition with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          1 + p;
+          return 0;
+        }");
+
+      ("subtraction with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          p - 1;
+          return 0;
+        }");
+
+      ("subtraction with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          1 - p;
+          return 0;
+        }");
+
+      ("multiplication with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          p * 1;
+          return 0;
+        }");
+
+      ("multiplication with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          1 * p;
+          return 0;
+        }");
+
+      ("division with non-int-compatible lhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          p / 1;
+          return 0;
+        }");
+
+      ("division with non-int-compatible rhs",
+       "int main(int argc, char* argv[]) {
+          int* p;
+          1 / p;
           return 0;
         }");
     ]
