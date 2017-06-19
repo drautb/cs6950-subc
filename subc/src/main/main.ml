@@ -16,25 +16,48 @@ let parse_with_error lexbuf =
     fprintf stderr "%a: syntax error\n" print_position lexbuf;
     exit(-2)
 
-let parse_and_print lexbuf =
+let parse lexbuf =
   match parse_with_error lexbuf with
-  | ast ->
-    printf "Parsed %d lines successfully!\nAST:\n\n%s\n\n"
-      lexbuf.lex_curr_p.pos_lnum
-      (Ast.string_of_ast ast);
-    printf "Typechecking...\n";
-    Typechecker.typecheck ast
+  | ast -> ast
+;;
 
-let loop filename () =
-  printf "Parsing file: %s...\n\n" filename;
+let get_program_name filename =
+  Filename.chop_extension (Filename.basename filename)
+;;
+
+let save_ast ast filename =
+  Out_channel.write_all ((get_program_name filename) ^ ".ast")
+    ~data:(Ast.string_of_ast ast)
+;;
+
+let save_llvm llvm filename =
+  let program_name = get_program_name filename in
+  match Llvm_bitwriter.write_bitcode_file llvm (program_name ^ ".bc") with
+  | true -> ()
+  | false -> raise (Failure "Failed to write LLVM .bc file")
+;;
+
+let run emit_ast emit_llvm filename () =
   let inx = In_channel.create filename in
   let lexbuf = Lexing.from_channel inx in
   lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filename };
-  parse_and_print lexbuf;
+  let ast = parse lexbuf in
+  let _ = match emit_ast with
+    | true -> save_ast ast filename
+    | false -> () in
+  let _ = Typechecker.typecheck ast in
+  let llvm_module = Generator.generate_module (get_program_name filename) ast in
+  let _ = match emit_llvm with
+    | true -> save_llvm llvm_module filename
+    | false -> () in
   In_channel.close inx
 
 let () =
-  Command.basic ~summary:"Compiler for SubC"
-    Command.Spec.(empty +> anon ("filename" %: file))
-    loop
+  Command.basic
+    ~summary:"Compiler for SubC programs"
+    Command.Spec.(empty
+                  +> flag "--emit-ast" no_arg ~doc:"Produce an .ast file representing the program."
+                  +> flag "--emit-llvm" no_arg ~doc:"Produce an LLVM .bc file representing the program."
+                  +> anon ("filename" %: file))
+    run
   |> Command.run
