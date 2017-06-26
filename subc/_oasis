@@ -17,7 +17,7 @@ Library subc_core
   Modules: Parser, Ast
   InternalModules: Lexer
   BuildTools: ocamlbuild
-  BuildDepends: core, sexplib, ppx_sexp_conv, llvm, llvm.bitwriter, re2
+  BuildDepends: core, sexplib, ppx_sexp_conv, llvm, llvm.bitwriter, llvm.analysis, re2
 
 Executable subc
   Path: src/main

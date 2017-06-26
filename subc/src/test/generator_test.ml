@@ -5,16 +5,97 @@ open Re2
 
 let examples = [
 
+  (* ---------------------------------------------------- *)
   ("simple main fn",
    "int main(int argc, char* argv[]) {
       return 0;
     }",
-   "define i32 @main() {
+   "define i32 @main(i32, i8**) {
     entry:
       ret i32 0
     }");
 
+  (* ---------------------------------------------------- *)
+  ("function with void return type",
 
+   "int main(int argc, char* argv[]) {
+      return 0;
+    }
+    void fn(void) {
+      return;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      ret i32 0
+    }
+
+    define void @fn() {
+    entry:
+      ret void
+    }");
+
+  (* ---------------------------------------------------- *)
+  ("function with char return type",
+
+   "int main(int argc, char* argv[]) {
+      return 0;
+    }
+    char fn(void) {
+      return 'c';
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      ret i32 0
+    }
+
+    define i8 @fn() {
+    entry:
+      ret i8 99
+    }");
+
+  (* ---------------------------------------------------- *)
+  ("function with pointer return type",
+
+   "int main(int argc, char* argv[]) {
+      return 0;
+    }
+    int* fn(void) {
+      int n;
+      return &n;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      ret i32 0
+    }
+
+    define i32* @fn() {
+    entry:
+      %\"1\" = alloca i32, align 4
+      ret i32* %\"1\"
+    }");
+
+  (* ---------------------------------------------------- *)
+  ("function with array parameter",
+
+   "int main(int argc, char* argv[]) {
+      return 0;
+    }
+    void fn(int stuff[]) {
+      return;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      ret i32 0
+    }
+
+    define void @fn(i32*) {
+    entry:
+      ret void
+    }");
 
 
 ]
@@ -34,12 +115,10 @@ let generator_tests =
      ~f:(fun (name, program, ll) ->
          name >::
          (fun _ ->
-            let actual_module = (Llvm.string_of_llmodule (Subc.llmodule_of_program name program)) in
-            assert_equal
-              (String.strip (build_expected name ll))
-              (String.strip actual_module)
-              ~msg:(sprintf
-                      ("Expected modules to be equal!\nExpected:
+            let expected_module = String.strip (build_expected name ll) in
+            let actual_module = String.strip (Llvm.string_of_llmodule (Subc.llmodule_of_program name program)) in
+            assert_equal expected_module actual_module
+              ~msg:(sprintf ("Expected modules to be equal!\nExpected:
 ------------------------------------------
 %s
 ------------------------------------------
