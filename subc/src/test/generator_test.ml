@@ -7,11 +7,19 @@ let examples = [
 
   (* ---------------------------------------------------- *)
   ("simple main fn",
+
    "int main(int argc, char* argv[]) {
       return 0;
     }",
+
    "define i32 @main(i32, i8**) {
     entry:
+      %2 = alloca i32, align 4
+      %3 = alloca i32, align 4
+      %4 = alloca i8**, align 8
+      store i32 0, i32* %2, align 4
+      store i32 %0, i32* %3, align 4
+      store i8** %1, i8*** %4, align 8
       ret i32 0
     }");
 
@@ -27,6 +35,12 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
+      %2 = alloca i32, align 4
+      %3 = alloca i32, align 4
+      %4 = alloca i8**, align 8
+      store i32 0, i32* %2, align 4
+      store i32 %0, i32* %3, align 4
+      store i8** %1, i8*** %4, align 8
       ret i32 0
     }
 
@@ -47,11 +61,19 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
+      %2 = alloca i32, align 4
+      %3 = alloca i32, align 4
+      %4 = alloca i8**, align 8
+      store i32 0, i32* %2, align 4
+      store i32 %0, i32* %3, align 4
+      store i8** %1, i8*** %4, align 8
       ret i32 0
     }
 
     define i8 @fn() {
     entry:
+      %0 = alloca i8, align 1
+      store i8 0, i8* %0, align 1
       ret i8 99
     }");
 
@@ -68,13 +90,20 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
+      %2 = alloca i32, align 4
+      %3 = alloca i32, align 4
+      %4 = alloca i8**, align 8
+      store i32 0, i32* %2, align 4
+      store i32 %0, i32* %3, align 4
+      store i8** %1, i8*** %4, align 8
       ret i32 0
     }
 
     define i32* @fn() {
     entry:
-      %\"1\" = alloca i32, align 4
-      ret i32* %\"1\"
+      %0 = alloca i32*, align 8
+      %1 = alloca i32, align 4
+      ret i32* %1
     }");
 
   (* ---------------------------------------------------- *)
@@ -89,14 +118,37 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
+      %2 = alloca i32, align 4
+      %3 = alloca i32, align 4
+      %4 = alloca i8**, align 8
+      store i32 0, i32* %2, align 4
+      store i32 %0, i32* %3, align 4
+      store i8** %1, i8*** %4, align 8
       ret i32 0
     }
 
     define void @fn(i32*) {
     entry:
+      %1 = alloca i32*, align 8
+      store i32* %0, i32** %1, align 8
       ret void
     }");
 
+  (* ---------------------------------------------------- *)
+(*
+  ("simple integer assignment",
+
+   "int main(int argc, char* argv[]) {
+      int n;
+      n = 42;
+      return n;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      ret i32 0
+    }");
+*)
 
 ]
 
