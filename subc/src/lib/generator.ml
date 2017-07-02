@@ -75,7 +75,7 @@ let generate_llvm_arg_list llctx arg_list =
         generate_llvm_type llctx arg_type))
 ;;
 
-let rec generate_expression llctx llm llbuilder scopes expr : llvalue =
+let rec generate_expression llctx llbuilder scopes expr : llvalue =
   match expr with
   | Assignment (_, _)
   | LogicalOr (_, _)
@@ -99,12 +99,12 @@ let rec generate_expression llctx llm llbuilder scopes expr : llvalue =
     let _ = set_alignment v (lookup_type scopes id_name) in v
   | IntConst n -> const_int (i32_type llctx) n
   | CharConst c -> const_int (i8_type llctx) (int_of_char c)
-  | AddressOf expr -> generate_expression llctx llm llbuilder scopes expr
+  | AddressOf expr -> generate_expression llctx llbuilder scopes expr
   | Dereference _
   | Negate _ -> todo ()
 ;;
 
-let generate_declaration llctx llm llbuilder scopes decl : unit =
+let generate_declaration llctx llbuilder scopes decl : unit =
   match decl with
   | VariableDeclaration (id_type, id_name) -> begin
       let id_llv = build_alloca (generate_llvm_type llctx id_type) "" llbuilder in
@@ -115,36 +115,25 @@ let generate_declaration llctx llm llbuilder scopes decl : unit =
 ;;
 
 
-let rec generate_statement llctx llm llbuilder scopes stmt : unit =
+let rec generate_statement llctx llbuilder scopes stmt : unit =
   let _ = match stmt with
     | Block (decls, stmts) ->
-      let _ = List.map decls ~f:(fun decl -> generate_declaration llctx llm llbuilder scopes decl) in
-      let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llm llbuilder scopes stmt) in ()
+      let _ = List.map decls ~f:(fun decl -> generate_declaration llctx llbuilder scopes decl) in
+      let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llbuilder scopes stmt) in ()
     | Conditional _
     | Expression _
     | Loop _ -> todo ()
     | Return ret_expr -> (match ret_expr with
         | None -> let _ = build_ret_void llbuilder in ()
         | Some expr ->
-          let ret_value = generate_expression llctx llm llbuilder scopes expr in
+          let ret_value = generate_expression llctx llbuilder scopes expr in
           let _ = build_ret ret_value llbuilder in ())
     | StmtVoid -> () in ()
 ;;
 
-let allocate_function_memory llctx llm llbuilder scopes
+let allocate_function_memory llctx llbuilder scopes
     (fn : llvalue)
-    (ret_type : subc_type)
     (arg_list : arg_list) : unit =
-  (* Allocation for return value *)
-  let ref_ret_value_lbl = ref (const_null (void_type llctx)) in
-  let _ = match ret_type with
-  | Void -> ()
-  | _ -> begin
-      let llvm_ret_type = generate_llvm_type llctx ret_type in
-      let ret_value_lbl = build_alloca llvm_ret_type "" llbuilder in
-      ref_ret_value_lbl := ret_value_lbl;
-      set_alignment !ref_ret_value_lbl ret_type
-    end in
 
   (* Allocations for function arguments *)
   let _ = match arg_list with
@@ -156,14 +145,6 @@ let allocate_function_memory llctx llm llbuilder scopes
           add_to_scope scopes name lbl arg_type) in
 
   (* Stores *)
-  let _ = match ret_type with
-    | Void
-    | Pointer _ -> ()
-    | _ -> let store_lbl = build_store (const_int (generate_llvm_type llctx ret_type) 0)
-               !ref_ret_value_lbl llbuilder in
-      set_alignment store_lbl ret_type in
-
-
   let _ = match arg_list with
     | ArgVoid -> ()
     | ArgList args ->
@@ -187,10 +168,10 @@ let generate_function_definition llctx llm scopes ret_type name arg_list stmt : 
   let llbuilder = builder_at_end llctx (entry_block fn) in
 
   (* Allocate memory for return value and each argument *)
-  let _ = allocate_function_memory llctx llm llbuilder scopes fn ret_type arg_list in
+  let _ = allocate_function_memory llctx llbuilder scopes fn arg_list in
 
   (* Generate blocks for function body *)
-  let _ = generate_statement llctx llm llbuilder scopes stmt in ()
+  let _ = generate_statement llctx llbuilder scopes stmt in ()
 ;;
 
 let generate_subc_unit llctx llm scopes (u : subc_unit) =
