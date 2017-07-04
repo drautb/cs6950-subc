@@ -3,8 +3,8 @@ open Llvm
 
 open Ast
 
-let todo () =
-  raise (Failure "todo")
+let todo str =
+  raise (Failure ("todo: " ^ str))
 ;;
 
 exception IdNotFound of string;;
@@ -46,7 +46,7 @@ let add_to_scope scopes (id : string) (llv : llvalue) (t : subc_type) : unit =
   | [] -> raise (Failure "empty scope list")
   | scope :: _ -> (match Hashtbl.find scope id with
       | None -> Hashtbl.set scope ~key:id ~data:(llv, t)
-      | Some _ -> todo ())
+      | Some _ -> todo (sprintf "Attempting to redefine %s, typechecker should have prevented this." id))
 ;;
 
 let rec generate_llvm_type llctx subc_type =
@@ -75,9 +75,13 @@ let generate_llvm_arg_list llctx arg_list =
         generate_llvm_type llctx arg_type))
 ;;
 
-let rec generate_expression llctx llbuilder scopes expr : llvalue =
+let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   match expr with
-  | Assignment (_, _)
+  | Assignment (lhs, rhs) ->
+    let lhs_value = generate_expression llctx llbuilder scopes lhs false in
+    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    let store_lbl = build_store rhs_value lhs_value llbuilder in
+    let _ = set_alignment store_lbl Int in store_lbl
   | LogicalOr (_, _)
   | LogicalAnd (_, _)
   | LogicalNot _
@@ -93,15 +97,18 @@ let rec generate_expression llctx llbuilder scopes expr : llvalue =
   | Divide (_, _)
   | Cast (_, _)
   | ArrayRef (_, _)
-  | FunctionCall (_, _) -> todo ()
+  | FunctionCall (_, _) -> todo "expr"
   | Id id_name ->
-    let v = lookup_value scopes id_name in
-    let _ = set_alignment v (lookup_type scopes id_name) in v
+    let v_address = lookup_value scopes id_name in
+    let result = match load_value with
+      | false -> v_address
+      | true -> build_load v_address "" llbuilder in
+    let _ = set_alignment result (lookup_type scopes id_name) in result
   | IntConst n -> const_int (i32_type llctx) n
   | CharConst c -> const_int (i8_type llctx) (int_of_char c)
-  | AddressOf expr -> generate_expression llctx llbuilder scopes expr
+  | AddressOf expr -> generate_expression llctx llbuilder scopes expr false
   | Dereference _
-  | Negate _ -> todo ()
+  | Negate _ -> todo "expr - Negate"
 ;;
 
 let generate_declaration llctx llbuilder scopes decl : unit =
@@ -120,13 +127,14 @@ let rec generate_statement llctx llbuilder scopes stmt : unit =
     | Block (decls, stmts) ->
       let _ = List.map decls ~f:(fun decl -> generate_declaration llctx llbuilder scopes decl) in
       let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llbuilder scopes stmt) in ()
-    | Conditional _
-    | Expression _
-    | Loop _ -> todo ()
+    | Conditional _ -> todo "statement - Conditional"
+    | Expression expr ->
+      let _ = generate_expression llctx llbuilder scopes expr true in ()
+    | Loop _ -> todo "statement - Loop"
     | Return ret_expr -> (match ret_expr with
         | None -> let _ = build_ret_void llbuilder in ()
         | Some expr ->
-          let ret_value = generate_expression llctx llbuilder scopes expr in
+          let ret_value = generate_expression llctx llbuilder scopes expr true in
           let _ = build_ret ret_value llbuilder in ())
     | StmtVoid -> () in ()
 ;;

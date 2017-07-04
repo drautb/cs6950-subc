@@ -122,7 +122,6 @@ let examples = [
     }");
 
   (* ---------------------------------------------------- *)
-(*
   ("simple integer assignment",
 
    "int main(int argc, char* argv[]) {
@@ -133,9 +132,15 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
-      ret i32 0
+      %2 = alloca i32, align 4
+      %3 = alloca i8**, align 8
+      store i32 %0, i32* %2, align 4
+      store i8** %1, i8*** %3, align 8
+      %4 = alloca i32, align 4
+      store i32 42, i32* %4, align 4
+      %5 = load i32, i32* %4, align 4
+      ret i32 %5
     }");
-*)
 
 ]
 
