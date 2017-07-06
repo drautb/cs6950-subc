@@ -169,6 +169,45 @@ let examples = [
       ret i32 %8
     }");
 
+  (* ---------------------------------------------------- *)
+  ("arithmetic",
+
+   "int main(int argc, char* argv[]) {
+      int result;
+      int x;
+      int y;
+      int z;
+      x = 10;
+      y = 5;
+      z = 3;
+      result = 2 + (x - y) * z;
+      return result;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      %5 = alloca i32
+      %6 = alloca i32
+      %7 = alloca i32
+      store i32 10, i32* %5
+      store i32 5, i32* %6
+      store i32 3, i32* %7
+      %8 = load i32, i32* %5
+      %9 = load i32, i32* %6
+      %10 = sub i32 %8, %9
+      %11 = load i32, i32* %7
+      %12 = mul i32 %10, %11
+      %13 = add i32 2, %12
+      store i32 %13, i32* %4
+      %14 = load i32, i32* %4
+      ret i32 %14
+    }");
+
 ]
 
 (* Does some string munging to make the example match reality

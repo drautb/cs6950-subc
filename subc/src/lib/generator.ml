@@ -90,10 +90,19 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   | LessThan (_, _)
   | LessThanEqual (_, _)
   | GreaterThan (_, _)
-  | GreaterThanEqual (_, _)
-  | Add (_, _)
-  | Subtract (_, _)
-  | Multiply (_, _)
+  | GreaterThanEqual (_, _) -> todo "expr"
+  | Add (lhs, rhs) ->
+    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
+    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    build_add lhs_value rhs_value "" llbuilder
+  | Subtract (lhs, rhs) ->
+    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
+    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    build_sub lhs_value rhs_value "" llbuilder
+  | Multiply (lhs, rhs) ->
+    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
+    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    build_mul lhs_value rhs_value "" llbuilder
   | Divide (_, _)
   | Cast (_, _)
   | ArrayRef (_, _)
