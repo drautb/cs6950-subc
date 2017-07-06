@@ -58,6 +58,7 @@ let rec generate_llvm_type llctx subc_type =
     | Pointer t | Array t -> pointer_type (generate_llvm_type llctx t)
 ;;
 
+(* Unused at the moment *)
 let set_alignment llvalue subc_type : unit =
   match subc_type with
   | Void -> ()
@@ -80,8 +81,7 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   | Assignment (lhs, rhs) ->
     let lhs_value = generate_expression llctx llbuilder scopes lhs false in
     let rhs_value = generate_expression llctx llbuilder scopes rhs true in
-    let store_lbl = build_store rhs_value lhs_value llbuilder in
-    let _ = set_alignment store_lbl Int in store_lbl
+    build_store rhs_value lhs_value llbuilder
   | LogicalOr (_, _)
   | LogicalAnd (_, _)
   | LogicalNot _
@@ -100,10 +100,9 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   | FunctionCall (_, _) -> todo "expr"
   | Id id_name ->
     let v_address = lookup_value scopes id_name in
-    let result = match load_value with
-      | false -> v_address
-      | true -> build_load v_address "" llbuilder in
-    let _ = set_alignment result (lookup_type scopes id_name) in result
+    (match load_value with
+     | false -> v_address
+     | true -> build_load v_address "" llbuilder)
   | IntConst n -> const_int (i32_type llctx) n
   | CharConst c -> const_int (i8_type llctx) (int_of_char c)
   | AddressOf expr -> generate_expression llctx llbuilder scopes expr false
@@ -118,7 +117,6 @@ let generate_declaration llctx llbuilder scopes decl : unit =
   | VariableDeclaration (id_type, id_name) -> begin
       let id_llv = build_alloca (generate_llvm_type llctx id_type) "" llbuilder in
       add_to_scope scopes id_name id_llv id_type;
-      set_alignment id_llv id_type;
     end
   | _ -> ()
 ;;
@@ -151,19 +149,14 @@ let allocate_function_memory llctx llbuilder scopes
     | ArgList args ->
       List.iter args ~f:(fun (arg_type, name) ->
           let lbl = build_alloca (generate_llvm_type llctx arg_type) "" llbuilder in
-          set_alignment lbl arg_type;
           add_to_scope scopes name lbl arg_type) in
 
   (* Stores *)
   let _ = match arg_list with
     | ArgVoid -> ()
     | ArgList args ->
-      List.iteri args ~f:(fun i (arg_type, name) ->
-          let store_lbl = build_store
-              (param fn i)
-              (lookup_value scopes name)
-              llbuilder in
-          set_alignment store_lbl arg_type;)
+      List.iteri args ~f:(fun i (_, name) ->
+          let _ = build_store (param fn i) (lookup_value scopes name) llbuilder in ())
   in ()
 ;;
 

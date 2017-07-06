@@ -14,10 +14,10 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
-      %2 = alloca i32, align 4
-      %3 = alloca i8**, align 8
-      store i32 %0, i32* %2, align 4
-      store i8** %1, i8*** %3, align 8
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
       ret i32 0
     }");
 
@@ -33,10 +33,10 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
-      %2 = alloca i32, align 4
-      %3 = alloca i8**, align 8
-      store i32 %0, i32* %2, align 4
-      store i8** %1, i8*** %3, align 8
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
       ret i32 0
     }
 
@@ -57,10 +57,10 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
-      %2 = alloca i32, align 4
-      %3 = alloca i8**, align 8
-      store i32 %0, i32* %2, align 4
-      store i8** %1, i8*** %3, align 8
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
       ret i32 0
     }
 
@@ -82,16 +82,16 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
-      %2 = alloca i32, align 4
-      %3 = alloca i8**, align 8
-      store i32 %0, i32* %2, align 4
-      store i8** %1, i8*** %3, align 8
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
       ret i32 0
     }
 
     define i32* @fn() {
     entry:
-      %0 = alloca i32, align 4
+      %0 = alloca i32
       ret i32* %0
     }");
 
@@ -107,17 +107,17 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
-      %2 = alloca i32, align 4
-      %3 = alloca i8**, align 8
-      store i32 %0, i32* %2, align 4
-      store i8** %1, i8*** %3, align 8
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
       ret i32 0
     }
 
     define void @fn(i32*) {
     entry:
-      %1 = alloca i32*, align 8
-      store i32* %0, i32** %1, align 8
+      %1 = alloca i32*
+      store i32* %0, i32** %1
       ret void
     }");
 
@@ -132,13 +132,13 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
-      %2 = alloca i32, align 4
-      %3 = alloca i8**, align 8
-      store i32 %0, i32* %2, align 4
-      store i8** %1, i8*** %3, align 8
-      %4 = alloca i32, align 4
-      store i32 42, i32* %4, align 4
-      %5 = load i32, i32* %4, align 4
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      store i32 42, i32* %4
+      %5 = load i32, i32* %4
       ret i32 %5
     }");
 
@@ -155,16 +155,16 @@ let examples = [
 
    "define i32 @main(i32, i8**) {
     entry:
-      %2 = alloca i32, align 4
-      %3 = alloca i8**, align 8
-      store i32 %0, i32* %2, align 4
-      store i8** %1, i8*** %3, align 8
-      %4 = alloca i32*, align 8
-      %5 = alloca i32*, align 8
-      store i32* %2, i32** %4, align 4
-      %6 = load i32*, i32** %4, align 8
-      store i32* %6, i32** %5, align 4
-      %7 = load i32*, i32** %5, align 8
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32*
+      %5 = alloca i32*
+      store i32* %2, i32** %4
+      %6 = load i32*, i32** %4
+      store i32* %6, i32** %5
+      %7 = load i32*, i32** %5
       %8 = load i32, i32* %7
       ret i32 %8
     }");
