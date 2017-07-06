@@ -107,7 +107,9 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   | IntConst n -> const_int (i32_type llctx) n
   | CharConst c -> const_int (i8_type llctx) (int_of_char c)
   | AddressOf expr -> generate_expression llctx llbuilder scopes expr false
-  | Dereference _
+  | Dereference expr ->
+    let v_address = generate_expression llctx llbuilder scopes expr true in
+    build_load v_address "" llbuilder
   | Negate _ -> todo "expr - Negate"
 ;;
 
@@ -201,8 +203,9 @@ let generate_module (module_name : string) (ast : ast) : llmodule =
     List.map unit_list ~f:(fun u -> generate_subc_unit llctx llm scopes u) in
 
   (* Make sure it's valid *)
-  Llvm_analysis.assert_valid_module llm;
-
-  (* Return *)
-  llm
+  match Llvm_analysis.verify_module llm with
+  | None -> llm
+  | Some err ->
+    printf "\n\nModule is not valid!\nError:\n%s\n\nModule:\n\n%s" err (string_of_llmodule llm);
+    raise (Failure "Module is not valid!")
 ;;

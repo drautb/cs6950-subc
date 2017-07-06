@@ -142,6 +142,33 @@ let examples = [
       ret i32 %5
     }");
 
+  (* ---------------------------------------------------- *)
+  ("simple pointer assignment",
+
+   "int main(int argc, char* argv[]) {
+      int* p1;
+      int* p2;
+      p1 = &argc;
+      p2 = p1;
+      return *p2;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32, align 4
+      %3 = alloca i8**, align 8
+      store i32 %0, i32* %2, align 4
+      store i8** %1, i8*** %3, align 8
+      %4 = alloca i32*, align 8
+      %5 = alloca i32*, align 8
+      store i32* %2, i32** %4, align 4
+      %6 = load i32*, i32** %4, align 8
+      store i32* %6, i32** %5, align 4
+      %7 = load i32*, i32** %5, align 8
+      %8 = load i32, i32* %7
+      ret i32 %8
+    }");
+
 ]
 
 (* Does some string munging to make the example match reality
