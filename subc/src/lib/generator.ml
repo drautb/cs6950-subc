@@ -103,7 +103,10 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
     let lhs_value = generate_expression llctx llbuilder scopes lhs true in
     let rhs_value = generate_expression llctx llbuilder scopes rhs true in
     build_mul lhs_value rhs_value "" llbuilder
-  | Divide (_, _)
+  | Divide (lhs, rhs) ->
+    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
+    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    build_sdiv lhs_value rhs_value "" llbuilder
   | Cast (_, _)
   | ArrayRef (_, _)
   | FunctionCall (_, _) -> todo "expr"
@@ -118,24 +121,36 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   | Dereference expr ->
     let v_address = generate_expression llctx llbuilder scopes expr true in
     build_load v_address "" llbuilder
-  | Negate _ -> todo "expr - Negate"
+  | Negate expr ->
+    let v = generate_expression llctx llbuilder scopes expr true in
+    build_sub (const_int (i32_type llctx) 0) v "" llbuilder
 ;;
 
-let generate_declaration llctx llbuilder scopes decl : unit =
+let generate_declaration llctx llm (llbuilder : llbuilder option) scopes decl : unit =
   match decl with
   | VariableDeclaration (id_type, id_name) -> begin
-      let id_llv = build_alloca (generate_llvm_type llctx id_type) "" llbuilder in
+      let id_llvm_type = generate_llvm_type llctx id_type in
+      let id_llv = (match llbuilder with
+          | None -> declare_global id_llvm_type id_name llm
+          | Some llbuilder -> build_alloca id_llvm_type "" llbuilder) in
       add_to_scope scopes id_name id_llv id_type;
     end
-  | _ -> ()
+  | ArrayDeclaration (id_type, id_name, array_size) -> begin
+      let id_llvm_type = generate_llvm_type llctx id_type in
+      let id_llv = (match llbuilder with
+          | None -> declare_global id_llvm_type id_name llm
+          | Some llbuilder -> build_alloca id_llvm_type "" llbuilder) in
+      add_to_scope scopes id_name id_llv id_type;
+    end
+  | FunctionDeclaration (_, _, _) -> todo "function declaration"
 ;;
 
 
-let rec generate_statement llctx llbuilder scopes stmt : unit =
+let rec generate_statement llctx llm llbuilder scopes stmt : unit =
   let _ = match stmt with
     | Block (decls, stmts) ->
-      let _ = List.map decls ~f:(fun decl -> generate_declaration llctx llbuilder scopes decl) in
-      let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llbuilder scopes stmt) in ()
+      let _ = List.map decls ~f:(fun decl -> generate_declaration llctx llm (Some llbuilder) scopes decl) in
+      let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llm llbuilder scopes stmt) in ()
     | Conditional _ -> todo "statement - Conditional"
     | Expression expr ->
       let _ = generate_expression llctx llbuilder scopes expr true in ()
@@ -183,12 +198,13 @@ let generate_function_definition llctx llm scopes ret_type name arg_list stmt : 
   let _ = allocate_function_memory llctx llbuilder scopes fn arg_list in
 
   (* Generate blocks for function body *)
-  let _ = generate_statement llctx llbuilder scopes stmt in ()
+  let _ = generate_statement llctx llm llbuilder scopes stmt in ()
 ;;
 
 let generate_subc_unit llctx llm scopes (u : subc_unit) =
   match u with
-  | Declaration _ -> ()
+  | Declaration decl ->
+    generate_declaration llctx llm None scopes decl
   | FunctionDefinition (ret_type, name, arg_list, stmt) ->
     generate_function_definition llctx llm scopes ret_type name arg_list stmt
 ;;

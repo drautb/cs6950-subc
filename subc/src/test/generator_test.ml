@@ -208,6 +208,63 @@ let examples = [
       ret i32 %14
     }");
 
+  (* ---------------------------------------------------- *)
+  ("arithmetic with division",
+
+   "int main(int argc, char* argv[]) {
+      int result;
+      int x;
+      int y;
+      x = 10;
+      y = 5;
+      result = x / y;
+      return result;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      %5 = alloca i32
+      %6 = alloca i32
+      store i32 10, i32* %5
+      store i32 5, i32* %6
+      %7 = load i32, i32* %5
+      %8 = load i32, i32* %6
+      %9 = sdiv i32 %7, %8
+      store i32 %9, i32* %4
+      %10 = load i32, i32* %4
+      ret i32 %10
+    }");
+
+  (* ---------------------------------------------------- *)
+  ("integer negation with re-assignment",
+
+   "int main(int argc, char* argv[]) {
+      int x;
+      x = 10;
+      x = -x;
+      return x;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      store i32 10, i32* %4
+      %5 = load i32, i32* %4
+      %6 = sub i32 0, %5
+      store i32 %6, i32* %4
+      %7 = load i32, i32* %4
+      ret i32 %7
+    }");
+
 ]
 
 (* Does some string munging to make the example match reality
