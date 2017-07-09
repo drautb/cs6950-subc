@@ -49,13 +49,16 @@ let add_to_scope scopes (id : string) (llv : llvalue) (t : subc_type) : unit =
       | Some _ -> todo (sprintf "Attempting to redefine %s, typechecker should have prevented this." id))
 ;;
 
-let rec generate_llvm_type llctx subc_type =
+let rec generate_llvm_type ?array_size:(array_size = -1) llctx subc_type =
   match subc_type with
     | Void -> void_type llctx
     | Int -> i32_type llctx
     | Char -> i8_type llctx
     | Bool -> i1_type llctx
-    | Pointer t | Array t -> pointer_type (generate_llvm_type llctx t)
+    | Pointer t -> pointer_type (generate_llvm_type llctx t)
+    | Array t -> (match array_size with
+        | -1 -> pointer_type (generate_llvm_type llctx t)
+        | _ -> array_type (generate_llvm_type llctx t) array_size)
 ;;
 
 (* Unused at the moment *)
@@ -107,9 +110,13 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
     let lhs_value = generate_expression llctx llbuilder scopes lhs true in
     let rhs_value = generate_expression llctx llbuilder scopes rhs true in
     build_sdiv lhs_value rhs_value "" llbuilder
-  | Cast (_, _)
-  | ArrayRef (_, _)
-  | FunctionCall (_, _) -> todo "expr"
+  | Cast (_, _) -> todo "cast"
+  | ArrayRef (array, idx) ->
+    let idx_v = generate_expression llctx llbuilder scopes idx true in
+    let array_address = generate_expression llctx llbuilder scopes array true in
+    let elt_ptr = build_in_bounds_gep array_address [| idx_v |] "" llbuilder in
+    let v = build_load elt_ptr "" llbuilder in v
+  | FunctionCall (_, _) -> todo "function call"
   | Id id_name ->
     let v_address = lookup_value scopes id_name in
     (match load_value with
@@ -136,7 +143,7 @@ let generate_declaration llctx llm (llbuilder : llbuilder option) scopes decl : 
       add_to_scope scopes id_name id_llv id_type;
     end
   | ArrayDeclaration (id_type, id_name, array_size) -> begin
-      let id_llvm_type = generate_llvm_type llctx id_type in
+      let id_llvm_type = generate_llvm_type llctx id_type ~array_size:array_size in
       let id_llv = (match llbuilder with
           | None -> declare_global id_llvm_type id_name llm
           | Some llbuilder -> build_alloca id_llvm_type "" llbuilder) in

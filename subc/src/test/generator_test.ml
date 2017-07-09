@@ -265,6 +265,88 @@ let examples = [
       ret i32 %7
     }");
 
+  (* ---------------------------------------------------- *)
+  ("global declarations",
+
+   "int n;
+    int *pn;
+    int arr[5];
+    char c;
+
+    int main(int argc, char* argv[]) {
+      n = 0;
+      return n;
+    }",
+
+   "@n = external global i32
+    @pn = external global i32*
+    @arr = external global [5 x i32]
+    @c = external global i8
+
+    define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      store i32 0, i32* @n
+      %4 = load i32, i32* @n
+      ret i32 %4
+    }");
+
+  (* ---------------------------------------------------- *)
+  ("read-only array reference",
+
+   "int main(int argc, char* argv[]) {
+      char* c;
+      c = argv[3];
+      return 0;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i8*
+      %5 = load i8**, i8*** %3
+      %6 = getelementptr inbounds i8*, i8** %5, i32 3
+      %7 = load i8*, i8** %6
+      store i8* %7, i8** %4
+      ret i32 0
+    }");
+
+  (* ---------------------------------------------------- *)
+  ("read-only array reference with arithmetic",
+
+   "int main(int argc, char* argv[]) {
+      char* c;
+      int n;
+      n = 4;
+      c = argv[n + 3];
+      return 0;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i8*
+      %5 = alloca i32
+      store i32 4, i32* %5
+      %6 = load i32, i32* %5
+      %7 = add i32 %6, 3
+      %8 = load i8**, i8*** %3
+      %9 = getelementptr inbounds i8*, i8** %8, i32 %7
+      %10 = load i8*, i8** %9
+      store i8* %10, i8** %4
+      ret i32 0
+    }");
+
+
 ]
 
 (* Does some string munging to make the example match reality
