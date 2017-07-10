@@ -394,27 +394,36 @@ let examples = [
     }");
 
   (* ---------------------------------------------------- *)
-  ("array reference assignment for function parameter array",
+  ("array reference read and assignment for function parameter array",
 
-   "void fn(int a[]) {
+   "int fn(int a[]) {
+      int x;
+      x = a[2];
       a[4] = 42;
-      return;
+      return a[4];
     }
 
     int main(int argc, char* argv[]) {
       int arr[5];
-      fn(arr);
-      return 0;
+      return fn(arr);
     }",
 
-   "define void @fn(i32*) {
+   "define i32 @fn(i32*) {
     entry:
       %1 = alloca i32*
       store i32* %0, i32** %1
-      %2 = load i32*, i32** %1
-      %3 = getelementptr inbounds i32, i32* %2, i32 4
-      store i32 42, i32* %3
-      ret void
+      %2 = alloca i32
+      %3 = load i32*, i32** %1
+      %4 = getelementptr inbounds i32, i32* %3, i32 2
+      %5 = load i32, i32* %4
+      store i32 %5, i32* %2
+      %6 = load i32*, i32** %1
+      %7 = getelementptr inbounds i32, i32* %6, i32 4
+      store i32 42, i32* %7
+      %8 = load i32*, i32** %1
+      %9 = getelementptr inbounds i32, i32* %8, i32 4
+      %10 = load i32, i32* %9
+      ret i32 %10
     }
 
     define i32 @main(i32, i8**) {
@@ -425,8 +434,8 @@ let examples = [
       store i8** %1, i8*** %3
       %4 = alloca [5 x i32]
       %5 = getelementptr inbounds [5 x i32], [5 x i32]* %4, i32 0, i32 0
-      call void @fn(i32* %5)
-      ret i32 0
+      %6 = call i32 @fn(i32* %5)
+      ret i32 %6
     }");
 
 
