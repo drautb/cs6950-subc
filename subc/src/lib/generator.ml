@@ -79,6 +79,21 @@ let generate_llvm_arg_list llctx arg_list =
         generate_llvm_type llctx arg_type))
 ;;
 
+let is_array_type array_expr scopes : bool =
+  match array_expr with
+  | Id id_name ->
+    let llv = lookup_value scopes id_name in
+    let llt = type_of llv in
+    (match classify_type llt with
+     | TypeKind.Pointer ->
+       let elt_t = element_type llt in
+       (match classify_type elt_t with
+        | TypeKind.Array -> true
+        | _ -> false)
+     | _ -> false)
+  | _ -> raise (Failure "Parser should prevent this.")
+;;
+
 let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   match expr with
   | Assignment (lhs, rhs) ->
@@ -111,17 +126,31 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
     let rhs_value = generate_expression llctx llbuilder scopes rhs true in
     build_sdiv lhs_value rhs_value "" llbuilder
   | Cast (_, _) -> todo "cast"
-  | ArrayRef (array, idx) ->
-    let idx_v = generate_expression llctx llbuilder scopes idx true in
-    let array_address = generate_expression llctx llbuilder scopes array true in
-    let elt_ptr = build_in_bounds_gep array_address [| idx_v |] "" llbuilder in
-    let v = build_load elt_ptr "" llbuilder in v
-  | FunctionCall (_, _) -> todo "function call"
+  | ArrayRef (array_expr, idx_expr) ->
+    let is_array_t = is_array_type array_expr scopes in
+    let idx_v = generate_expression llctx llbuilder scopes idx_expr true in
+    let array_address = generate_expression llctx llbuilder scopes array_expr (not is_array_t) in
+    let indices = (match is_array_t with
+        | true -> [| (const_int (i32_type llctx) 0); idx_v |]
+        | false -> [| idx_v |]) in
+    let elt_ptr = build_in_bounds_gep array_address indices "" llbuilder in
+    (match load_value with
+     | true -> build_load elt_ptr "" llbuilder
+     | false -> elt_ptr)
+  | FunctionCall (fn_expr, arg_expr_list) ->
+    let fn_v = generate_expression llctx llbuilder scopes fn_expr false in
+    let args = Array.of_list_map arg_expr_list ~f:(fun arg_expr -> generate_expression llctx llbuilder scopes arg_expr true) in
+    build_call fn_v args "" llbuilder
   | Id id_name ->
     let v_address = lookup_value scopes id_name in
     (match load_value with
      | false -> v_address
-     | true -> build_load v_address "" llbuilder)
+     | true ->
+       (match is_array_type (Id id_name) scopes with
+        | false -> build_load v_address "" llbuilder
+        | true ->
+          let zero = const_int (i32_type llctx) 0 in
+          build_in_bounds_gep v_address [| zero; zero |] "" llbuilder))
   | IntConst n -> const_int (i32_type llctx) n
   | CharConst c -> const_int (i8_type llctx) (int_of_char c)
   | AddressOf expr -> generate_expression llctx llbuilder scopes expr false
@@ -197,6 +226,9 @@ let generate_function_definition llctx llm scopes ret_type name arg_list stmt : 
   let llvm_arg_list = generate_llvm_arg_list llctx arg_list in
   let fn_type = function_type llvm_ret_type llvm_arg_list in
   let fn = define_function name fn_type llm in
+
+  (* Register function in environment *)
+  let _ = add_to_scope scopes name fn ret_type in
 
   (* Create builder for function blocks *)
   let llbuilder = builder_at_end llctx (entry_block fn) in

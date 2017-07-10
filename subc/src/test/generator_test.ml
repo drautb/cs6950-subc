@@ -346,6 +346,89 @@ let examples = [
       ret i32 0
     }");
 
+  (* ---------------------------------------------------- *)
+  ("read-only array reference for a declared array",
+
+   "int arr[10];
+    int main(int argc, char* argv[]) {
+      int n;
+      n = 5;
+      return arr[n];
+    }",
+
+   "@arr = external global [10 x i32]
+
+    define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      store i32 5, i32* %4
+      %5 = load i32, i32* %4
+      %6 = getelementptr inbounds [10 x i32], [10 x i32]* @arr, i32 0, i32 %5
+      %7 = load i32, i32* %6
+      ret i32 %7
+    }");
+
+  (* ---------------------------------------------------- *)
+  ("array reference assignment for local array",
+
+   "int main(int argc, char* argv[]) {
+      int arr[5];
+      arr[3] = 42;
+      return 0;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca [5 x i32]
+      %5 = getelementptr inbounds [5 x i32], [5 x i32]* %4, i32 0, i32 3
+      store i32 42, i32* %5
+      ret i32 0
+    }");
+
+  (* ---------------------------------------------------- *)
+  ("array reference assignment for function parameter array",
+
+   "void fn(int a[]) {
+      a[4] = 42;
+      return;
+    }
+
+    int main(int argc, char* argv[]) {
+      int arr[5];
+      fn(arr);
+      return 0;
+    }",
+
+   "define void @fn(i32*) {
+    entry:
+      %1 = alloca i32*
+      store i32* %0, i32** %1
+      %2 = load i32*, i32** %1
+      %3 = getelementptr inbounds i32, i32* %2, i32 4
+      store i32 42, i32* %3
+      ret void
+    }
+
+    define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca [5 x i32]
+      %5 = getelementptr inbounds [5 x i32], [5 x i32]* %4, i32 0, i32 0
+      call void @fn(i32* %5)
+      ret i32 0
+    }");
+
 
 ]
 
