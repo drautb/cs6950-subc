@@ -103,7 +103,10 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   | LogicalOr (_, _) -> todo "or"
   | LogicalAnd (_, _) -> todo "and"
   | LogicalNot _ -> todo "not"
-  | Equal (lhs, rhs) -> todo "equal"
+  | Equal (lhs, rhs) ->
+    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
+    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    build_icmp Icmp.Eq lhs_value rhs_value "" llbuilder
   | NotEqual (_, _) -> todo "not equal"
   | LessThan (_, _) -> todo "less than"
   | LessThanEqual (_, _) -> todo "less than equal"
