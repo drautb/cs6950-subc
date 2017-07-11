@@ -534,6 +534,35 @@ let examples = [
       ret i32 0
     }");
 
+  (* ---------------------------------------------------- *)
+  ("logical not",
+
+   "int main(int argc, char* argv[]) {
+      int x;
+      int y;
+      x = 3;
+      y = 4;
+      !(x == y);
+      return 0;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      %5 = alloca i32
+      store i32 3, i32* %4
+      store i32 4, i32* %5
+      %6 = load i32, i32* %4
+      %7 = load i32, i32* %5
+      %8 = icmp eq i32 %6, %7
+      %9 = xor i1 %8, true
+      ret i32 0
+    }");
+
 ]
 
 (* Does some string munging to make the example match reality
