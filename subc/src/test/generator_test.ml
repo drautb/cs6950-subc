@@ -494,6 +494,46 @@ let examples = [
       ret i32 0
     }");
 
+  (* ---------------------------------------------------- *)
+  ("other integer comparisons",
+
+   "int main(int argc, char* argv[]) {
+      int x;
+      int y;
+      x = 3;
+      y = 4;
+      x < y;
+      x <= y;
+      x > y;
+      x >= y;
+      return 0;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      %5 = alloca i32
+      store i32 3, i32* %4
+      store i32 4, i32* %5
+      %6 = load i32, i32* %4
+      %7 = load i32, i32* %5
+      %8 = icmp slt i32 %6, %7
+      %9 = load i32, i32* %4
+      %10 = load i32, i32* %5
+      %11 = icmp sle i32 %9, %10
+      %12 = load i32, i32* %4
+      %13 = load i32, i32* %5
+      %14 = icmp sgt i32 %12, %13
+      %15 = load i32, i32* %4
+      %16 = load i32, i32* %5
+      %17 = icmp sge i32 %15, %16
+      ret i32 0
+    }");
+
 ]
 
 (* Does some string munging to make the example match reality

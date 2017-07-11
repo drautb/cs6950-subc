@@ -103,18 +103,12 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   | LogicalOr (_, _) -> todo "or"
   | LogicalAnd (_, _) -> todo "and"
   | LogicalNot _ -> todo "not"
-  | Equal (lhs, rhs) ->
-    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
-    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
-    build_icmp Icmp.Eq lhs_value rhs_value "" llbuilder
-  | NotEqual (lhs, rhs) ->
-    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
-    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
-    build_icmp Icmp.Ne lhs_value rhs_value "" llbuilder
-  | LessThan (_, _) -> todo "less than"
-  | LessThanEqual (_, _) -> todo "less than equal"
-  | GreaterThan (_, _) -> todo "greater than"
-  | GreaterThanEqual (_, _) -> todo "greater than equal"
+  | Equal (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Eq
+  | NotEqual (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Ne
+  | LessThan (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Slt
+  | LessThanEqual (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Sle
+  | GreaterThan (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Sgt
+  | GreaterThanEqual (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Sge
   | Add (lhs, rhs) ->
     let lhs_value = generate_expression llctx llbuilder scopes lhs true in
     let rhs_value = generate_expression llctx llbuilder scopes rhs true in
@@ -166,6 +160,10 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
   | Negate expr ->
     let v = generate_expression llctx llbuilder scopes expr true in
     build_sub (const_int (i32_type llctx) 0) v "" llbuilder
+and generate_icmp llctx llbuilder scopes lhs rhs (cmp : Icmp.t) : llvalue =
+  let lhs_value = generate_expression llctx llbuilder scopes lhs true in
+  let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+  build_icmp cmp lhs_value rhs_value "" llbuilder
 ;;
 
 let generate_declaration llctx llm (llbuilder : llbuilder option) scopes decl : unit =
