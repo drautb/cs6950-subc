@@ -94,44 +94,44 @@ let is_array_type array_expr scopes : bool =
   | _ -> raise (Failure "Parser should prevent this.")
 ;;
 
-let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
+let rec generate_expression llctx fn llbuilder scopes expr load_value : llvalue =
   match expr with
   | Assignment (lhs, rhs) ->
-    let lhs_value = generate_expression llctx llbuilder scopes lhs false in
-    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    let lhs_value = generate_expression llctx fn llbuilder scopes lhs false in
+    let rhs_value = generate_expression llctx fn llbuilder scopes rhs true in
     build_store rhs_value lhs_value llbuilder
   | LogicalOr (_, _) -> todo "or"
   | LogicalAnd (_, _) -> todo "and"
   | LogicalNot expr ->
-    let expr_v = generate_expression llctx llbuilder scopes expr false in
+    let expr_v = generate_expression llctx fn llbuilder scopes expr false in
     build_xor expr_v (const_int (i1_type llctx) 1) "" llbuilder
-  | Equal (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Eq
-  | NotEqual (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Ne
-  | LessThan (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Slt
-  | LessThanEqual (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Sle
-  | GreaterThan (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Sgt
-  | GreaterThanEqual (lhs, rhs) -> generate_icmp llctx llbuilder scopes lhs rhs Icmp.Sge
+  | Equal (lhs, rhs) -> generate_icmp llctx fn llbuilder scopes lhs rhs Icmp.Eq
+  | NotEqual (lhs, rhs) -> generate_icmp llctx fn llbuilder scopes lhs rhs Icmp.Ne
+  | LessThan (lhs, rhs) -> generate_icmp llctx fn llbuilder scopes lhs rhs Icmp.Slt
+  | LessThanEqual (lhs, rhs) -> generate_icmp llctx fn llbuilder scopes lhs rhs Icmp.Sle
+  | GreaterThan (lhs, rhs) -> generate_icmp llctx fn llbuilder scopes lhs rhs Icmp.Sgt
+  | GreaterThanEqual (lhs, rhs) -> generate_icmp llctx fn llbuilder scopes lhs rhs Icmp.Sge
   | Add (lhs, rhs) ->
-    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
-    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    let lhs_value = generate_expression llctx fn llbuilder scopes lhs true in
+    let rhs_value = generate_expression llctx fn llbuilder scopes rhs true in
     build_add lhs_value rhs_value "" llbuilder
   | Subtract (lhs, rhs) ->
-    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
-    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    let lhs_value = generate_expression llctx fn llbuilder scopes lhs true in
+    let rhs_value = generate_expression llctx fn llbuilder scopes rhs true in
     build_sub lhs_value rhs_value "" llbuilder
   | Multiply (lhs, rhs) ->
-    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
-    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    let lhs_value = generate_expression llctx fn llbuilder scopes lhs true in
+    let rhs_value = generate_expression llctx fn llbuilder scopes rhs true in
     build_mul lhs_value rhs_value "" llbuilder
   | Divide (lhs, rhs) ->
-    let lhs_value = generate_expression llctx llbuilder scopes lhs true in
-    let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+    let lhs_value = generate_expression llctx fn llbuilder scopes lhs true in
+    let rhs_value = generate_expression llctx fn llbuilder scopes rhs true in
     build_sdiv lhs_value rhs_value "" llbuilder
   | Cast (_, _) -> todo "cast"
   | ArrayRef (array_expr, idx_expr) ->
     let is_array_t = is_array_type array_expr scopes in
-    let idx_v = generate_expression llctx llbuilder scopes idx_expr true in
-    let array_address = generate_expression llctx llbuilder scopes array_expr (not is_array_t) in
+    let idx_v = generate_expression llctx fn llbuilder scopes idx_expr true in
+    let array_address = generate_expression llctx fn llbuilder scopes array_expr (not is_array_t) in
     let indices = (match is_array_t with
         | true -> [| (const_int (i32_type llctx) 0); idx_v |]
         | false -> [| idx_v |]) in
@@ -140,8 +140,9 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
      | true -> build_load elt_ptr "" llbuilder
      | false -> elt_ptr)
   | FunctionCall (fn_expr, arg_expr_list) ->
-    let fn_v = generate_expression llctx llbuilder scopes fn_expr false in
-    let args = Array.of_list_map arg_expr_list ~f:(fun arg_expr -> generate_expression llctx llbuilder scopes arg_expr true) in
+    let fn_v = generate_expression llctx fn llbuilder scopes fn_expr false in
+    let args = Array.of_list_map arg_expr_list
+        ~f:(fun arg_expr -> generate_expression llctx fn llbuilder scopes arg_expr true) in
     build_call fn_v args "" llbuilder
   | Id id_name ->
     let v_address = lookup_value scopes id_name in
@@ -155,16 +156,16 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
           build_in_bounds_gep v_address [| zero; zero |] "" llbuilder))
   | IntConst n -> const_int (i32_type llctx) n
   | CharConst c -> const_int (i8_type llctx) (int_of_char c)
-  | AddressOf expr -> generate_expression llctx llbuilder scopes expr false
+  | AddressOf expr -> generate_expression llctx fn llbuilder scopes expr false
   | Dereference expr ->
-    let v_address = generate_expression llctx llbuilder scopes expr true in
+    let v_address = generate_expression llctx fn llbuilder scopes expr true in
     build_load v_address "" llbuilder
   | Negate expr ->
-    let v = generate_expression llctx llbuilder scopes expr true in
+    let v = generate_expression llctx fn llbuilder scopes expr true in
     build_sub (const_int (i32_type llctx) 0) v "" llbuilder
-and generate_icmp llctx llbuilder scopes lhs rhs (cmp : Icmp.t) : llvalue =
-  let lhs_value = generate_expression llctx llbuilder scopes lhs true in
-  let rhs_value = generate_expression llctx llbuilder scopes rhs true in
+and generate_icmp llctx fn llbuilder scopes lhs rhs (cmp : Icmp.t) : llvalue =
+  let lhs_value = generate_expression llctx fn llbuilder scopes lhs true in
+  let rhs_value = generate_expression llctx fn llbuilder scopes rhs true in
   build_icmp cmp lhs_value rhs_value "" llbuilder
 ;;
 
@@ -187,20 +188,19 @@ let generate_declaration llctx llm (llbuilder : llbuilder option) scopes decl : 
   | FunctionDeclaration (_, _, _) -> todo "function declaration"
 ;;
 
-
-let rec generate_statement llctx llm llbuilder scopes stmt : unit =
+let rec generate_statement llctx llm fn llbuilder scopes stmt : unit =
   let _ = match stmt with
     | Block (decls, stmts) ->
       let _ = List.map decls ~f:(fun decl -> generate_declaration llctx llm (Some llbuilder) scopes decl) in
-      let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llm llbuilder scopes stmt) in ()
+      let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llm fn llbuilder scopes stmt) in ()
     | Conditional _ -> todo "statement - Conditional"
     | Expression expr ->
-      let _ = generate_expression llctx llbuilder scopes expr true in ()
+      let _ = generate_expression llctx fn llbuilder scopes expr true in ()
     | Loop _ -> todo "statement - Loop"
     | Return ret_expr -> (match ret_expr with
         | None -> let _ = build_ret_void llbuilder in ()
         | Some expr ->
-          let ret_value = generate_expression llctx llbuilder scopes expr true in
+          let ret_value = generate_expression llctx fn llbuilder scopes expr true in
           let _ = build_ret ret_value llbuilder in ())
     | StmtVoid -> () in ()
 ;;
@@ -243,7 +243,7 @@ let generate_function_definition llctx llm scopes ret_type name arg_list stmt : 
   let _ = allocate_function_memory llctx llbuilder scopes fn arg_list in
 
   (* Generate blocks for function body *)
-  let _ = generate_statement llctx llm llbuilder scopes stmt in ()
+  let _ = generate_statement llctx llm fn llbuilder scopes stmt in ()
 ;;
 
 let generate_subc_unit llctx llm scopes (u : subc_unit) =
