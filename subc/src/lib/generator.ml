@@ -100,15 +100,15 @@ let rec generate_expression llctx llbuilder scopes expr load_value : llvalue =
     let lhs_value = generate_expression llctx llbuilder scopes lhs false in
     let rhs_value = generate_expression llctx llbuilder scopes rhs true in
     build_store rhs_value lhs_value llbuilder
-  | LogicalOr (_, _)
-  | LogicalAnd (_, _)
-  | LogicalNot _
-  | Equal (_, _)
-  | NotEqual (_, _)
-  | LessThan (_, _)
-  | LessThanEqual (_, _)
-  | GreaterThan (_, _)
-  | GreaterThanEqual (_, _) -> todo "expr"
+  | LogicalOr (_, _) -> todo "or"
+  | LogicalAnd (_, _) -> todo "and"
+  | LogicalNot _ -> todo "not"
+  | Equal (lhs, rhs) -> todo "equal"
+  | NotEqual (_, _) -> todo "not equal"
+  | LessThan (_, _) -> todo "less than"
+  | LessThanEqual (_, _) -> todo "less than equal"
+  | GreaterThan (_, _) -> todo "greater than"
+  | GreaterThanEqual (_, _) -> todo "greater than equal"
   | Add (lhs, rhs) ->
     let lhs_value = generate_expression llctx llbuilder scopes lhs true in
     let rhs_value = generate_expression llctx llbuilder scopes rhs true in
