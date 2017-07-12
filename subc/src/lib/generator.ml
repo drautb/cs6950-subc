@@ -203,6 +203,17 @@ and generate_logical_cmp llctx fn llbuilder scopes lhs rhs (cmp : logical_cmp) :
   result_v
 ;;
 
+let add_function_to_scopes llctx llm scopes ret_type name arg_list : llvalue =
+  (* Build function definition *)
+  let llvm_ret_type = generate_llvm_type llctx ret_type in
+  let llvm_arg_list = generate_llvm_arg_list llctx arg_list in
+  let fn_type = function_type llvm_ret_type llvm_arg_list in
+  let fn = define_function name fn_type llm in
+
+  (* Register function in environment *)
+  let _ = add_to_scope scopes name fn ret_type in fn
+;;
+
 let generate_declaration llctx llm (llbuilder : llbuilder option) scopes decl : unit =
   match decl with
   | VariableDeclaration (id_type, id_name) -> begin
@@ -219,7 +230,8 @@ let generate_declaration llctx llm (llbuilder : llbuilder option) scopes decl : 
           | Some llbuilder -> build_alloca id_llvm_type "" llbuilder) in
       add_to_scope scopes id_name id_llv id_type;
     end
-  | FunctionDeclaration (_, _, _) -> todo "function declaration"
+  | FunctionDeclaration (ret_type, name, arg_list) ->
+    let _ = add_function_to_scopes llctx llm scopes ret_type name arg_list in ()
 ;;
 
 let rec generate_statement llctx llm fn llbuilder scopes stmt : unit =
@@ -261,14 +273,9 @@ let allocate_function_memory llctx llbuilder scopes
 ;;
 
 let generate_function_definition llctx llm scopes ret_type name arg_list stmt : unit =
-  (* Build function definition *)
-  let llvm_ret_type = generate_llvm_type llctx ret_type in
-  let llvm_arg_list = generate_llvm_arg_list llctx arg_list in
-  let fn_type = function_type llvm_ret_type llvm_arg_list in
-  let fn = define_function name fn_type llm in
-
-  (* Register function in environment *)
-  let _ = add_to_scope scopes name fn ret_type in
+  (* Get a handle to the LLVM function *)
+  let fn = try lookup_value scopes name with
+    | IdNotFound _ -> add_function_to_scopes llctx llm scopes ret_type name arg_list in
 
   (* Create builder for function blocks *)
   let llbuilder = builder_at_end llctx (entry_block fn) in

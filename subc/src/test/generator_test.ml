@@ -643,6 +643,42 @@ let examples = [
       ret i32 0
     }");
 
+  (* ---------------------------------------------------- *)
+  ("function call with prototype",
+
+   "int fn(int n);
+
+    int main(int argc, char* argv[]) {
+      int x;
+      x = 0;
+      return fn(x);
+    }
+
+    int fn(int n) {
+      return n;
+    }",
+
+   "define i32 @fn(i32) {
+    entry:
+      %1 = alloca i32
+      store i32 %0, i32* %1
+      %2 = load i32, i32* %1
+      ret i32 %2
+    }
+
+    define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      store i32 0, i32* %4
+      %5 = load i32, i32* %4
+      %6 = call i32 @fn(i32 %5)
+      ret i32 %6
+    }");
+
 ]
 
 (* Does some string munging to make the example match reality
