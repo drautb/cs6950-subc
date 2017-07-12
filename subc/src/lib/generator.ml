@@ -9,6 +9,11 @@ let todo str =
 
 exception IdNotFound of string;;
 
+type logical_cmp =
+  | Or
+  | And
+;;
+
 let make_scope () =
   Hashtbl.create ~hashable:String.hashable ()
 ;;
@@ -100,8 +105,8 @@ let rec generate_expression llctx fn llbuilder scopes expr load_value : llvalue 
     let lhs_value = generate_expression llctx fn llbuilder scopes lhs false in
     let rhs_value = generate_expression llctx fn llbuilder scopes rhs true in
     build_store rhs_value lhs_value llbuilder
-  | LogicalOr (_, _) -> todo "or"
-  | LogicalAnd (_, _) -> todo "and"
+  | LogicalOr (lhs, rhs) -> generate_logical_cmp llctx fn llbuilder scopes lhs rhs Or
+  | LogicalAnd (lhs, rhs) -> generate_logical_cmp llctx fn llbuilder scopes lhs rhs And
   | LogicalNot expr ->
     let expr_v = generate_expression llctx fn llbuilder scopes expr false in
     build_xor expr_v (const_int (i1_type llctx) 1) "" llbuilder
@@ -167,6 +172,34 @@ and generate_icmp llctx fn llbuilder scopes lhs rhs (cmp : Icmp.t) : llvalue =
   let lhs_value = generate_expression llctx fn llbuilder scopes lhs true in
   let rhs_value = generate_expression llctx fn llbuilder scopes rhs true in
   build_icmp cmp lhs_value rhs_value "" llbuilder
+and generate_logical_cmp llctx fn llbuilder scopes lhs rhs (cmp : logical_cmp) : llvalue =
+  (* result_v is for the overall result of the OR, since I'm trying to avoid phi nodes *)
+  let result_v = build_alloca (generate_llvm_type llctx Bool) "" llbuilder in
+
+  (* Evaluate the LHS, and store the result *)
+  let lhs_value = generate_expression llctx fn llbuilder scopes lhs false in
+  let _ = build_store lhs_value result_v llbuilder in
+
+  (* Start a new block and evaluate the RHS, storing the result *)
+  let rhs_block = append_block llctx "" fn in
+  let rhs_builder = builder_at_end llctx rhs_block in
+  let rhs_value = generate_expression llctx fn rhs_builder scopes rhs false in
+  let _ = build_store rhs_value result_v rhs_builder in
+
+  (* Create the exit block for ongoing generation *)
+  let cont_block = append_block llctx "" fn in
+
+  (* Create a branch back in the original block *)
+  let _ = match cmp with
+    | Or -> build_cond_br lhs_value cont_block rhs_block llbuilder
+    | And -> build_cond_br lhs_value rhs_block cont_block llbuilder in
+  let _ = build_br cont_block rhs_builder in
+
+  (* Move the original llbuilder down to the end of the cont_block *)
+  let _ = position_at_end cont_block llbuilder in
+
+  (* Return the result value *)
+  result_v
 ;;
 
 let generate_declaration llctx llm (llbuilder : llbuilder option) scopes decl : unit =

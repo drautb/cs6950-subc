@@ -563,6 +563,86 @@ let examples = [
       ret i32 0
     }");
 
+  (* ---------------------------------------------------- *)
+  ("logical or",
+
+   "int main(int argc, char* argv[]) {
+      int x;
+      int y;
+      x = 3;
+      y = 4;
+      x == y || x == y;
+      return 0;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      %5 = alloca i32
+      store i32 3, i32* %4
+      store i32 4, i32* %5
+      %6 = alloca i1
+      %7 = load i32, i32* %4
+      %8 = load i32, i32* %5
+      %9 = icmp eq i32 %7, %8
+      store i1 %9, i1* %6
+      br i1 %9, label %14, label %10
+
+    ; <label>:10:                                     ; preds = %entry
+      %11 = load i32, i32* %4
+      %12 = load i32, i32* %5
+      %13 = icmp eq i32 %11, %12
+      store i1 %13, i1* %6
+      br label %14
+
+    ; <label>:14:                                     ; preds = %10, %entry
+      ret i32 0
+    }");
+
+  (* ---------------------------------------------------- *)
+  ("logical and",
+
+   "int main(int argc, char* argv[]) {
+      int x;
+      int y;
+      x = 3;
+      y = 4;
+      x == y && x == y;
+      return 0;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i8**
+      store i32 %0, i32* %2
+      store i8** %1, i8*** %3
+      %4 = alloca i32
+      %5 = alloca i32
+      store i32 3, i32* %4
+      store i32 4, i32* %5
+      %6 = alloca i1
+      %7 = load i32, i32* %4
+      %8 = load i32, i32* %5
+      %9 = icmp eq i32 %7, %8
+      store i1 %9, i1* %6
+      br i1 %9, label %10, label %14
+
+    ; <label>:10:                                     ; preds = %entry
+      %11 = load i32, i32* %4
+      %12 = load i32, i32* %5
+      %13 = icmp eq i32 %11, %12
+      store i1 %13, i1* %6
+      br label %14
+
+    ; <label>:14:                                     ; preds = %10, %entry
+      ret i32 0
+    }");
+
 ]
 
 (* Does some string munging to make the example match reality
