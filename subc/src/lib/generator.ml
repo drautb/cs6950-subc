@@ -51,7 +51,8 @@ let add_to_scope scopes (id : string) (llv : llvalue) (t : subc_type) : unit =
   | [] -> raise (Failure "empty scope list")
   | scope :: _ -> (match Hashtbl.find scope id with
       | None -> Hashtbl.set scope ~key:id ~data:(llv, t)
-      | Some _ -> todo (sprintf "Attempting to redefine %s, typechecker should have prevented this." id))
+      | Some _ ->
+        raise (Failure (sprintf "Attempting to redefine %s, typechecker should have prevented this." id)))
 ;;
 
 let rec generate_llvm_type ?array_size:(array_size = -1) llctx subc_type =
