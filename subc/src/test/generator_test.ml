@@ -19,7 +19,12 @@ let examples = [
       %4 = alloca i8**
       store i32 %0, i32* %3
       store i8** %1, i8*** %4
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %5 = load i32, i32* %2
+      ret i32 %5
     }");
 
   (* ---------------------------------------------------- *)
@@ -39,11 +44,19 @@ let examples = [
       %4 = alloca i8**
       store i32 %0, i32* %3
       store i8** %1, i8*** %4
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %5 = load i32, i32* %2
+      ret i32 %5
     }
 
     define void @fn() {
     entry:
+      br label %return
+
+    return:                                           ; preds = %entry
       ret void
     }");
 
@@ -64,13 +77,23 @@ let examples = [
       %4 = alloca i8**
       store i32 %0, i32* %3
       store i8** %1, i8*** %4
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %5 = load i32, i32* %2
+      ret i32 %5
     }
 
     define i8 @fn() {
     entry:
       %0 = alloca i8
-      ret i8 99
+      store i8 99, i8* %0
+      br label %return
+
+    return:                                           ; preds = %entry
+      %1 = load i8, i8* %0
+      ret i8 %1
     }");
 
   (* ---------------------------------------------------- *)
@@ -91,14 +114,24 @@ let examples = [
       %4 = alloca i8**
       store i32 %0, i32* %3
       store i8** %1, i8*** %4
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %5 = load i32, i32* %2
+      ret i32 %5
     }
 
     define i32* @fn() {
     entry:
       %0 = alloca i32*
       %1 = alloca i32
-      ret i32* %1
+      store i32* %1, i32** %0
+      br label %return
+
+    return:                                           ; preds = %entry
+      %2 = load i32*, i32** %0
+      ret i32* %2
     }");
 
   (* ---------------------------------------------------- *)
@@ -118,13 +151,21 @@ let examples = [
       %4 = alloca i8**
       store i32 %0, i32* %3
       store i8** %1, i8*** %4
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %5 = load i32, i32* %2
+      ret i32 %5
     }
 
     define void @fn(i32*) {
     entry:
       %1 = alloca i32*
       store i32* %0, i32** %1
+      br label %return
+
+    return:                                           ; preds = %entry
       ret void
     }");
 
@@ -147,7 +188,12 @@ let examples = [
       %5 = alloca i32
       store i32 42, i32* %5
       %6 = load i32, i32* %5
-      ret i32 %6
+      store i32 %6, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %7 = load i32, i32* %2
+      ret i32 %7
     }");
 
   (* ---------------------------------------------------- *)
@@ -175,7 +221,12 @@ let examples = [
       store i32* %7, i32** %6
       %8 = load i32*, i32** %6
       %9 = load i32, i32* %8
-      ret i32 %9
+      store i32 %9, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %10 = load i32, i32* %2
+      ret i32 %10
     }");
 
   (* ---------------------------------------------------- *)
@@ -215,7 +266,12 @@ let examples = [
       %14 = add i32 2, %13
       store i32 %14, i32* %5
       %15 = load i32, i32* %5
-      ret i32 %15
+      store i32 %15, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %16 = load i32, i32* %2
+      ret i32 %16
     }");
 
   (* ---------------------------------------------------- *)
@@ -248,7 +304,12 @@ let examples = [
       %10 = sdiv i32 %8, %9
       store i32 %10, i32* %5
       %11 = load i32, i32* %5
-      ret i32 %11
+      store i32 %11, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %12 = load i32, i32* %2
+      ret i32 %12
     }");
 
   (* ---------------------------------------------------- *)
@@ -274,7 +335,12 @@ let examples = [
       %7 = sub i32 0, %6
       store i32 %7, i32* %5
       %8 = load i32, i32* %5
-      ret i32 %8
+      store i32 %8, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %9 = load i32, i32* %2
+      ret i32 %9
     }");
 
   (* ---------------------------------------------------- *)
@@ -304,7 +370,12 @@ let examples = [
       store i8** %1, i8*** %4
       store i32 0, i32* @n
       %5 = load i32, i32* @n
-      ret i32 %5
+      store i32 %5, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %6 = load i32, i32* %2
+      ret i32 %6
     }");
 
   (* ---------------------------------------------------- *)
@@ -328,7 +399,12 @@ let examples = [
       %7 = getelementptr inbounds i8*, i8** %6, i32 3
       %8 = load i8*, i8** %7
       store i8* %8, i8** %5
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %9 = load i32, i32* %2
+      ret i32 %9
     }");
 
   (* ---------------------------------------------------- *)
@@ -358,7 +434,12 @@ let examples = [
       %10 = getelementptr inbounds i8*, i8** %9, i32 %8
       %11 = load i8*, i8** %10
       store i8* %11, i8** %5
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %12 = load i32, i32* %2
+      ret i32 %12
     }");
 
   (* ---------------------------------------------------- *)
@@ -385,7 +466,12 @@ let examples = [
       %6 = load i32, i32* %5
       %7 = getelementptr inbounds [10 x i32], [10 x i32]* @arr, i32 0, i32 %6
       %8 = load i32, i32* %7
-      ret i32 %8
+      store i32 %8, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %9 = load i32, i32* %2
+      ret i32 %9
     }");
 
   (* ---------------------------------------------------- *)
@@ -407,7 +493,12 @@ let examples = [
       %5 = alloca [5 x i32]
       %6 = getelementptr inbounds [5 x i32], [5 x i32]* %5, i32 0, i32 3
       store i32 42, i32* %6
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %7 = load i32, i32* %2
+      ret i32 %7
     }");
 
   (* ---------------------------------------------------- *)
@@ -441,7 +532,12 @@ let examples = [
       %9 = load i32*, i32** %2
       %10 = getelementptr inbounds i32, i32* %9, i32 4
       %11 = load i32, i32* %10
-      ret i32 %11
+      store i32 %11, i32* %1
+      br label %return
+
+    return:                                           ; preds = %entry
+      %12 = load i32, i32* %1
+      ret i32 %12
     }
 
     define i32 @main(i32, i8**) {
@@ -454,7 +550,12 @@ let examples = [
       %5 = alloca [5 x i32]
       %6 = getelementptr inbounds [5 x i32], [5 x i32]* %5, i32 0, i32 0
       %7 = call i32 @fn(i32* %6)
-      ret i32 %7
+      store i32 %7, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %8 = load i32, i32* %2
+      ret i32 %8
     }");
 
   (* ---------------------------------------------------- *)
@@ -483,7 +584,12 @@ let examples = [
       %7 = load i32, i32* %5
       %8 = load i32, i32* %6
       %9 = icmp eq i32 %7, %8
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %10 = load i32, i32* %2
+      ret i32 %10
     }");
 
   (* ---------------------------------------------------- *)
@@ -512,7 +618,12 @@ let examples = [
       %7 = load i32, i32* %5
       %8 = load i32, i32* %6
       %9 = icmp ne i32 %7, %8
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %10 = load i32, i32* %2
+      ret i32 %10
     }");
 
   (* ---------------------------------------------------- *)
@@ -553,7 +664,12 @@ let examples = [
       %16 = load i32, i32* %5
       %17 = load i32, i32* %6
       %18 = icmp sge i32 %16, %17
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %19 = load i32, i32* %2
+      ret i32 %19
     }");
 
   (* ---------------------------------------------------- *)
@@ -583,7 +699,12 @@ let examples = [
       %8 = load i32, i32* %6
       %9 = icmp eq i32 %7, %8
       %10 = xor i1 %9, true
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %11 = load i32, i32* %2
+      ret i32 %11
     }");
 
   (* ---------------------------------------------------- *)
@@ -624,7 +745,12 @@ let examples = [
       br label %15
 
     ; <label>:15:                                     ; preds = %11, %entry
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %15
+      %16 = load i32, i32* %2
+      ret i32 %16
     }");
 
   (* ---------------------------------------------------- *)
@@ -665,7 +791,12 @@ let examples = [
       br label %15
 
     ; <label>:15:                                     ; preds = %11, %entry
-      ret i32 0
+      store i32 0, i32* %2
+      br label %return
+
+    return:                                           ; preds = %15
+      %16 = load i32, i32* %2
+      ret i32 %16
     }");
 
   (* ---------------------------------------------------- *)
@@ -689,7 +820,12 @@ let examples = [
       %2 = alloca i32
       store i32 %0, i32* %2
       %3 = load i32, i32* %2
-      ret i32 %3
+      store i32 %3, i32* %1
+      br label %return
+
+    return:                                           ; preds = %entry
+      %4 = load i32, i32* %1
+      ret i32 %4
     }
 
     define i32 @main(i32, i8**) {
@@ -703,7 +839,12 @@ let examples = [
       store i32 0, i32* %5
       %6 = load i32, i32* %5
       %7 = call i32 @fn(i32 %6)
-      ret i32 %7
+      store i32 %7, i32* %2
+      br label %return
+
+    return:                                           ; preds = %entry
+      %8 = load i32, i32* %2
+      ret i32 %8
     }");
 
 ]

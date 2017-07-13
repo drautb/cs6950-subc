@@ -237,32 +237,33 @@ let generate_declaration llctx llm (llbuilder : llbuilder option) scopes decl : 
     let _ = add_function_to_scopes llctx llm scopes ret_type name arg_list in ()
 ;;
 
-let rec generate_statement llctx llm fn llbuilder scopes stmt : unit =
+let rec generate_statement llctx llm fn ret_block ret_v_addr llbuilder scopes stmt : unit =
   let _ = match stmt with
     | Block (decls, stmts) ->
       let _ = List.map decls ~f:(fun decl -> generate_declaration llctx llm (Some llbuilder) scopes decl) in
-      let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llm fn llbuilder scopes stmt) in ()
+      let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llm fn ret_block ret_v_addr llbuilder scopes stmt) in ()
     | Conditional _ -> todo "statement - Conditional"
     | Expression expr ->
       let _ = generate_expression llctx fn llbuilder scopes expr true in ()
     | Loop _ -> todo "statement - Loop"
     | Return ret_expr -> (match ret_expr with
-        | None -> let _ = build_ret_void llbuilder in ()
+        | None -> let _ = build_br ret_block llbuilder in ()
         | Some expr ->
           let ret_value = generate_expression llctx fn llbuilder scopes expr true in
-          let _ = build_ret ret_value llbuilder in ())
+          let _ = build_store ret_value ret_v_addr llbuilder in
+          let _ = build_br ret_block llbuilder in ())
     | StmtVoid -> () in ()
 ;;
 
 let allocate_function_memory llctx llbuilder scopes
     (ret_type : subc_type)
     (fn : llvalue)
-    (arg_list : arg_list) : unit =
+    (arg_list : arg_list) : llvalue =
 
   (* Allocate memory for return value *)
-  let _ = match ret_type with
-    | Void -> ()
-    | _ -> let _ = build_alloca (generate_llvm_type llctx ret_type) "" llbuilder in () in
+  let ret_v = match ret_type with
+    | Void -> const_null (void_type llctx)
+    | _ -> build_alloca (generate_llvm_type llctx ret_type) "" llbuilder in
 
   (* Allocations for function arguments *)
   let _ = match arg_list with
@@ -278,7 +279,8 @@ let allocate_function_memory llctx llbuilder scopes
     | ArgList args ->
       List.iteri args ~f:(fun i (_, name) ->
           let _ = build_store (param fn i) (lookup_value scopes name) llbuilder in ())
-  in ()
+
+  in ret_v
 ;;
 
 let generate_function_definition llctx llm scopes ret_type name arg_list stmt : unit =
@@ -290,10 +292,24 @@ let generate_function_definition llctx llm scopes ret_type name arg_list stmt : 
   let llbuilder = builder_at_end llctx (entry_block fn) in
 
   (* Allocate memory for return value and each argument *)
-  let _ = allocate_function_memory llctx llbuilder scopes ret_type fn arg_list in
+  let ret_v_address = allocate_function_memory llctx llbuilder scopes ret_type fn arg_list in
+
+  (* Create a block fo the return instruction *)
+  let return_block = append_block llctx "return" fn in
 
   (* Generate blocks for function body *)
-  let _ = generate_statement llctx llm fn llbuilder scopes stmt in ()
+  let _ = generate_statement llctx llm fn return_block ret_v_address llbuilder scopes stmt in
+
+  (* Make sure the return block comes last, just for aesthetic reasons *)
+  let _ = move_block_after (Array.last (basic_blocks fn)) return_block in
+
+  (* Build the return instruction in the return block *)
+  let ret_builder = builder_at_end llctx return_block in
+  let _ = match ret_type with
+  | Void -> build_ret_void ret_builder
+  | _ ->
+    let ret_v = build_load ret_v_address "" ret_builder in
+    build_ret ret_v ret_builder in ()
 ;;
 
 let generate_subc_unit llctx llm scopes (u : subc_unit) =
