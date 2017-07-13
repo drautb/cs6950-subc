@@ -3,6 +3,9 @@ open Llvm
 
 open Ast
 
+(* Manufactured variable name used to hold the return value for a function *)
+let retval = "%retval";;
+
 let todo str =
   raise (Failure ("todo: " ^ str))
 ;;
@@ -252,8 +255,14 @@ let rec generate_statement llctx llm fn llbuilder scopes stmt : unit =
 ;;
 
 let allocate_function_memory llctx llbuilder scopes
+    (ret_type : subc_type)
     (fn : llvalue)
     (arg_list : arg_list) : unit =
+
+  (* Allocate memory for return value *)
+  let _ = match ret_type with
+    | Void -> ()
+    | _ -> let _ = build_alloca (generate_llvm_type llctx ret_type) "" llbuilder in () in
 
   (* Allocations for function arguments *)
   let _ = match arg_list with
@@ -281,7 +290,7 @@ let generate_function_definition llctx llm scopes ret_type name arg_list stmt : 
   let llbuilder = builder_at_end llctx (entry_block fn) in
 
   (* Allocate memory for return value and each argument *)
-  let _ = allocate_function_memory llctx llbuilder scopes fn arg_list in
+  let _ = allocate_function_memory llctx llbuilder scopes ret_type fn arg_list in
 
   (* Generate blocks for function body *)
   let _ = generate_statement llctx llm fn llbuilder scopes stmt in ()
