@@ -298,8 +298,10 @@ let rec generate_statement llctx llm
       let body_builder = builder_at_end llctx body_block in
       let _ = generate_statement llctx llm fn ret_block ret_v_addr body_builder scopes body_stmt in
 
-      (* Branch back to the header after executing the body *)
-      let _ = build_br hdr_block body_builder in
+      (* Branch back to the header after executing the body unless the block already has a terminator. *)
+      let _ = match block_terminator body_block with
+        | None -> build_br hdr_block body_builder
+        | Some _ -> const_null (void_type llctx) in
 
       (* Create a block for the continuation *)
       let cont_block = append_block llctx "" fn in
