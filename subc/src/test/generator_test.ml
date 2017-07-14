@@ -995,6 +995,50 @@ let examples = [
       %13 = load i32, i32* %2
       ret i32 %13
     }");
+
+  (* ---------------------------------------------------- *)
+  ("basic loop",
+
+   "int main(int argc, char* argv[]) {
+      int x;
+      x = 0;
+      while (x < 10) {
+        x = x + 1;
+      }
+      return x;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i32
+      %4 = alloca i8**
+      store i32 %0, i32* %3
+      store i8** %1, i8*** %4
+      %5 = alloca i32
+      store i32 0, i32* %5
+      br label %6
+
+    ; <label>:6:                                      ; preds = %9, %entry
+      %7 = load i32, i32* %5
+      %8 = icmp slt i32 %7, 10
+      br i1 %8, label %9, label %12
+
+    ; <label>:9:                                      ; preds = %6
+      %10 = load i32, i32* %5
+      %11 = add i32 %10, 1
+      store i32 %11, i32* %5
+      br label %6
+
+    ; <label>:12:                                     ; preds = %6
+      %13 = load i32, i32* %5
+      store i32 %13, i32* %2
+      br label %return
+
+    return:                                           ; preds = %12
+      %14 = load i32, i32* %2
+      ret i32 %14
+    }");
 ]
 
 (* Does some string munging to make the example match reality

@@ -283,7 +283,33 @@ let rec generate_statement llctx llm
 
     | Expression expr ->
       let _ = generate_expression llctx fn llbuilder scopes expr true in ()
-    | Loop _ -> todo "statement - Loop"
+    | Loop (test_expr, body_stmt) ->
+
+      (* Create a block for the header *)
+      let hdr_block = append_block llctx "" fn in
+      let hdr_builder = builder_at_end llctx hdr_block in
+      let test_v = generate_expression llctx fn hdr_builder scopes test_expr false in
+
+      (* Branch to the header *)
+      let _ = build_br hdr_block llbuilder in
+
+      (* Create a block for the body *)
+      let body_block = append_block llctx "" fn in
+      let body_builder = builder_at_end llctx body_block in
+      let _ = generate_statement llctx llm fn ret_block ret_v_addr body_builder scopes body_stmt in
+
+      (* Branch back to the header after executing the body *)
+      let _ = build_br hdr_block body_builder in
+
+      (* Create a block for the continuation *)
+      let cont_block = append_block llctx "" fn in
+
+      (* Build the branch command at the end of the header block *)
+      let _ = build_cond_br test_v body_block cont_block hdr_builder in
+
+      (* Update the builder pointer *)
+      let _ = position_at_end cont_block llbuilder in ()
+
     | Return ret_expr -> (match ret_expr with
         | None -> let _ = build_br ret_block llbuilder in ()
         | Some expr ->
