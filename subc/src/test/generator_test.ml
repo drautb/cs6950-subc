@@ -848,7 +848,7 @@ let examples = [
     }");
 
   (* ---------------------------------------------------- *)
-  ("conditional statement",
+  ("conditional statement with each branch having a return",
 
    "int main(int argc, char* argv[]) {
       int x;
@@ -861,6 +861,7 @@ let examples = [
       else {
         return 0;
       }
+      x = 0;
     }",
 
    "define i32 @main(i32, i8**) {
@@ -892,6 +893,62 @@ let examples = [
       ret i32 %12
     }");
 
+  (* ---------------------------------------------------- *)
+  ("conditional statement with code after split",
+
+   "int main(int argc, char* argv[]) {
+      int x;
+      int y;
+      int z;
+      x = 3;
+      y = 4;
+      if (x == y) {
+        return 0;
+      }
+      else {
+        z = 3;
+      }
+      z = z * 2;
+      return z;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i32
+      %4 = alloca i8**
+      store i32 %0, i32* %3
+      store i8** %1, i8*** %4
+      %5 = alloca i32
+      %6 = alloca i32
+      %7 = alloca i32
+      store i32 3, i32* %5
+      store i32 4, i32* %6
+      %8 = load i32, i32* %5
+      %9 = load i32, i32* %6
+      %10 = icmp eq i32 %8, %9
+      br i1 %10, label %11, label %12
+
+    ; <label>:11:                                     ; preds = %entry
+      store i32 0, i32* %2
+      br label %return
+
+    ; <label>:12:                                     ; preds = %entry
+      store i32 3, i32* %7
+      br label %13
+
+    ; <label>:13:                                     ; preds = %12
+      %14 = load i32, i32* %7
+      %15 = mul i32 %14, 2
+      store i32 %15, i32* %7
+      %16 = load i32, i32* %7
+      store i32 %16, i32* %2
+      br label %return
+
+    return:                                           ; preds = %13, %11
+      %17 = load i32, i32* %2
+      ret i32 %17
+    }");
 ]
 
 (* Does some string munging to make the example match reality

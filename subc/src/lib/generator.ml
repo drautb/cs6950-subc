@@ -273,16 +273,22 @@ let rec generate_statement llctx llm
       (* Update the llbuilder pointer *)
       let _ = position_at_end cont_block llbuilder in
 
-      (* If both branches end with a terminator already, then we can delete the cont block. *)
+      (* If both branches end with a terminator already, then we can delete the cont block. If either of
+         the blocks does _not_ end with a terminator, then it should branch to the cont block. *)
       let then_terminates = match block_terminator then_block with
-        | None -> false
+        | None ->
+          let builder = builder_at_end llctx then_block in
+          let _ = build_br cont_block builder in false
         | Some _ -> true in
       let else_terminates = match block_terminator else_block with
-        | None -> false
+        | None ->
+          let builder = builder_at_end llctx else_block in
+          let _ = build_br cont_block builder in false
         | Some _ -> true in
       let _ = match then_terminates && else_terminates with
       | true -> delete_block cont_block
       | false -> () in ()
+
     | Expression expr ->
       let _ = generate_expression llctx fn llbuilder scopes expr true in ()
     | Loop _ -> todo "statement - Loop"
