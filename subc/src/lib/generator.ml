@@ -275,16 +275,8 @@ let rec generate_statement llctx llm
 
       (* If both branches end with a terminator already, then we can delete the cont block. If either of
          the blocks does _not_ end with a terminator, then it should branch to the cont block. *)
-      let then_terminates = match block_terminator then_block with
-        | None ->
-          let builder = builder_at_end llctx then_block in
-          let _ = build_br cont_block builder in false
-        | Some _ -> true in
-      let else_terminates = match block_terminator else_block with
-        | None ->
-          let builder = builder_at_end llctx else_block in
-          let _ = build_br cont_block builder in false
-        | Some _ -> true in
+      let then_terminates = connect_block llctx then_block cont_block in
+      let else_terminates = connect_block llctx else_block cont_block in
       let _ = match then_terminates && else_terminates with
       | true -> delete_block cont_block
       | false -> () in ()
@@ -299,6 +291,12 @@ let rec generate_statement llctx llm
           let _ = build_store ret_value ret_v_addr llbuilder in
           let _ = build_br ret_block llbuilder in ())
     | StmtVoid -> () in ()
+and connect_block llctx exit_block cont_block : bool =
+  match block_terminator exit_block with
+  | None ->
+    let builder = builder_at_end llctx exit_block in
+    let _ = build_br cont_block builder in false
+  | Some _ -> true
 ;;
 
 let allocate_function_memory llctx llbuilder scopes

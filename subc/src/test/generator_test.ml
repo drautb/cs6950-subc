@@ -949,6 +949,52 @@ let examples = [
       %17 = load i32, i32* %2
       ret i32 %17
     }");
+
+  (* ---------------------------------------------------- *)
+  ("conditional statement with return in if, and no else",
+
+   "int main(int argc, char* argv[]) {
+      int x;
+      int y;
+      x = 3;
+      y = 4;
+      if (x == y) {
+        return 1;
+      }
+      x = 0;
+    }",
+
+   "define i32 @main(i32, i8**) {
+    entry:
+      %2 = alloca i32
+      %3 = alloca i32
+      %4 = alloca i8**
+      store i32 %0, i32* %3
+      store i8** %1, i8*** %4
+      %5 = alloca i32
+      %6 = alloca i32
+      store i32 3, i32* %5
+      store i32 4, i32* %6
+      %7 = load i32, i32* %5
+      %8 = load i32, i32* %6
+      %9 = icmp eq i32 %7, %8
+      br i1 %9, label %10, label %11
+
+    ; <label>:10:                                     ; preds = %entry
+      store i32 1, i32* %2
+      br label %return
+
+    ; <label>:11:                                     ; preds = %entry
+      br label %12
+
+    ; <label>:12:                                     ; preds = %11
+      store i32 0, i32* %5
+      br label %return
+
+    return:                                           ; preds = %12, %10
+      %13 = load i32, i32* %2
+      ret i32 %13
+    }");
 ]
 
 (* Does some string munging to make the example match reality
