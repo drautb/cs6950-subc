@@ -237,12 +237,52 @@ let generate_declaration llctx llm (llbuilder : llbuilder option) scopes decl : 
     let _ = add_function_to_scopes llctx llm scopes ret_type name arg_list in ()
 ;;
 
-let rec generate_statement llctx llm fn ret_block ret_v_addr llbuilder scopes stmt : unit =
+let rec generate_statement llctx llm
+    (fn : llvalue)
+    (ret_block : llbasicblock)
+    (ret_v_addr : llvalue)
+    (llbuilder : llbuilder)
+    scopes stmt : unit =
   let _ = match stmt with
     | Block (decls, stmts) ->
       let _ = List.map decls ~f:(fun decl -> generate_declaration llctx llm (Some llbuilder) scopes decl) in
       let _ = List.map stmts ~f:(fun stmt -> generate_statement llctx llm fn ret_block ret_v_addr llbuilder scopes stmt) in ()
-    | Conditional _ -> todo "statement - Conditional"
+    | Conditional (test_expr, then_stmt, else_stmt_opt) ->
+      (* Evaluate the test expression *)
+      let result_v = generate_expression llctx fn llbuilder scopes test_expr false in
+
+      (* Start a new block for the then branch *)
+      let then_block = append_block llctx "" fn in
+      let then_builder = builder_at_end llctx then_block in
+      let _ = generate_statement llctx llm fn ret_block ret_v_addr then_builder scopes then_stmt in
+
+      (* Start a new block for the else branch *)
+      let else_block = append_block llctx "" fn in
+      let _ = (match else_stmt_opt with
+          | None -> ()
+          | Some else_stmt ->
+            let else_builder = builder_at_end llctx else_block in
+            let _ = generate_statement llctx llm fn ret_block ret_v_addr else_builder scopes else_stmt in ()) in
+
+      (* Branch based on the result *)
+      let _ = build_cond_br result_v then_block else_block llbuilder in
+
+      (* Create the exit block for ongoing computation *)
+      let cont_block = append_block llctx "" fn in
+
+      (* Update the llbuilder pointer *)
+      let _ = position_at_end cont_block llbuilder in
+
+      (* If both branches end with a terminator already, then we can delete the cont block. *)
+      let then_terminates = match block_terminator then_block with
+        | None -> false
+        | Some _ -> true in
+      let else_terminates = match block_terminator else_block with
+        | None -> false
+        | Some _ -> true in
+      let _ = match then_terminates && else_terminates with
+      | true -> delete_block cont_block
+      | false -> () in ()
     | Expression expr ->
       let _ = generate_expression llctx fn llbuilder scopes expr true in ()
     | Loop _ -> todo "statement - Loop"
@@ -309,7 +349,17 @@ let generate_function_definition llctx llm scopes ret_type name arg_list stmt : 
   | Void -> build_ret_void ret_builder
   | _ ->
     let ret_v = build_load ret_v_address "" ret_builder in
-    build_ret ret_v ret_builder in ()
+    build_ret ret_v ret_builder in
+
+  (* Final cleanup step, make sure that all basic blocks have terminators. Any blocks that don't
+     end with a terminator get an unconditional jump to the return block, unless they don't have
+     any predecessors, in which case they're deleted *)
+  Array.iter (basic_blocks fn)
+    ~f:(fun bb -> match block_terminator bb with
+        | None ->
+          let builder = builder_at_end llctx bb in
+          let _ = build_br return_block builder in ()
+        | Some _ -> ())
 ;;
 
 let generate_subc_unit llctx llm scopes (u : subc_unit) =
