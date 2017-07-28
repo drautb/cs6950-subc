@@ -1,3 +1,5 @@
+int fib(int n);
+
 int fib(int n) {
   if (n < 2) {
     return n;
@@ -7,6 +9,5 @@ int fib(int n) {
 }
 
 int main(int argc, char* argv[]) {
-  fib(5);
-  return 0;
+  return fib(10);
 }

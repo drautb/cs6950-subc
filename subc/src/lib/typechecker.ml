@@ -15,12 +15,27 @@ let lookup_fn fn_table name =
   Hashtbl.find fn_table name
 ;;
 
+let string_of_fn_table fn_table =
+  Hashtbl.fold
+    fn_table
+    ~init:"\n"
+    ~f:(fun ~key:k ~data:v acc ->
+        match v with
+        | (ret_type, args, defined, valid_return) ->
+          acc ^ (sprintf "Name: %s | RET: %s    ARGS: %s    DEFINED: %s    VALID RET: %s\n"
+                   k
+                   (string_of_subc_type ret_type)
+                   (string_of_arg_list args)
+                   (string_of_bool defined)
+                   (string_of_bool valid_return)))
+;;
+
 (* Saves an entry to the function table. defined and valid_return are just flags
    that indicate whether or not a definition for this function has already been
    found, and whether or not the function has a valid return statement if it is
    a non-void function, respectively. *)
 let save_fn fn_table name ret_type args (defined : bool) (valid_return : bool) =
-  Hashtbl.set fn_table ~key:name ~data:(ret_type, args, defined, valid_return)
+  Hashtbl.set fn_table ~key:name ~data:(ret_type, args, defined, valid_return);
 ;;
 
 let make_scope () =
@@ -267,7 +282,9 @@ let typecheck_return fn_table scopes (ret_type : subc_type) name ret_expr =
       | Void -> raise (TypeError "void function may not return a value")
       | _ -> let ret_expr_type = typecheck_expression fn_table scopes expr in
         (match compatible_types ret_type ret_expr_type with
-         | true -> save_fn fn_table name Void ArgVoid false true
+         | true -> (match lookup_fn fn_table name with
+             | Some (ret_type, args, defined, _) -> save_fn fn_table name ret_type args defined true
+             | None -> save_fn fn_table name Void ArgVoid false true)
          | false -> raise (TypeError "return expression is not compatible with declared return type")))
 ;;
 

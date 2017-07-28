@@ -73,3 +73,7 @@ let string_of_ast ast =
 let string_of_subc_type subc_type =
   Sexp.to_string (sexp_of_subc_type subc_type)
 ;;
+
+let string_of_arg_list arg_list =
+  Sexp.to_string (sexp_of_arg_list arg_list)
+;;
