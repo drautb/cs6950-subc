@@ -103,7 +103,7 @@ let is_array_type array_expr scopes : bool =
   | _ -> raise (Failure "Parser should prevent this.")
 ;;
 
-let rec generate_expression llctx fn llbuilder scopes expr load_value : llvalue =
+let rec generate_expression_with_tail llctx fn llbuilder scopes expr load_value tail_pos : llvalue =
   match expr with
   | Assignment (lhs, rhs) ->
     let lhs_value = generate_expression llctx fn llbuilder scopes lhs false in
@@ -152,7 +152,11 @@ let rec generate_expression llctx fn llbuilder scopes expr load_value : llvalue 
     let fn_v = generate_expression llctx fn llbuilder scopes fn_expr false in
     let args = Array.of_list_map arg_expr_list
         ~f:(fun arg_expr -> generate_expression llctx fn llbuilder scopes arg_expr true) in
-    build_call fn_v args "" llbuilder
+    let call_v = build_call fn_v args "" llbuilder in
+    let _ = (match tail_pos with
+        | true -> set_tail_call true call_v
+        | false -> ()) in
+    call_v
   | Id id_name ->
     let v_address = lookup_value scopes id_name in
     (match load_value with
@@ -172,6 +176,8 @@ let rec generate_expression llctx fn llbuilder scopes expr load_value : llvalue 
   | Negate expr ->
     let v = generate_expression llctx fn llbuilder scopes expr true in
     build_sub (const_int (i32_type llctx) 0) v "" llbuilder
+and generate_expression llctx fn llbuilder scopes expr load_value : llvalue =
+  generate_expression_with_tail llctx fn llbuilder scopes expr load_value false
 and generate_icmp llctx fn llbuilder scopes lhs rhs (cmp : Icmp.t) : llvalue =
   let lhs_value = generate_expression llctx fn llbuilder scopes lhs true in
   let rhs_value = generate_expression llctx fn llbuilder scopes rhs true in
@@ -315,7 +321,7 @@ let rec generate_statement llctx llm
     | Return ret_expr -> (match ret_expr with
         | None -> let _ = build_br ret_block llbuilder in ()
         | Some expr ->
-          let ret_value = generate_expression llctx fn llbuilder scopes expr true in
+          let ret_value = generate_expression_with_tail llctx fn llbuilder scopes expr true true in
           let _ = build_store ret_value ret_v_addr llbuilder in
           let _ = build_br ret_block llbuilder in ())
     | StmtVoid -> () in ()
